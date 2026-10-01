@@ -208,7 +208,7 @@ function addInfluencer(){
   };
 }
 const loaders=[];
-const API="PASTE_APPS_SCRIPT_URL";
+const API="https://script.google.com/macros/s/AKfycbxP-46usVJB9eXTtKi8bRSJo6nRkYuaUW7d5Uin1eejdByh4cHDOu-9LSJjiiyt_zOC/exec";
 let AUTH=null;
 async function gs(fn,...a){
   const body={fn,email:AUTH.email,password:AUTH.password,n:a[0],id:fn==="put"||fn==="del"?a[1]:undefined,d:fn==="add"?a[1]:fn==="put"?a[2]:undefined};
