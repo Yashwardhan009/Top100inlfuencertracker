@@ -46,7 +46,7 @@ button:disabled{opacity:.5;cursor:default}
 .side{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;max-height:calc(100vh - 32px);overflow-y:auto}
 .head{display:flex;gap:12px;align-items:center;margin:8px 0 16px}.head .av{width:48px;height:48px;font-size:16px}
 .head h2{margin:0;font-size:20px;letter-spacing:-.01em}
-.facts{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin:-4px 0 18px}.facts:empty{display:none}.facts>div{overflow-wrap:anywhere}.facts a{color:var(--accent);font-weight:500;text-decoration:none}.facts a:hover{text-decoration:underline}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin:-4px 0 18px}.facts:empty{display:none}.facts>div{overflow-wrap:anywhere}.brow{display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.brow a{color:var(--accent);text-decoration:none}.facts a{color:var(--accent);font-weight:500;text-decoration:none}.facts a:hover{text-decoration:underline}
 .form{display:grid;gap:10px;background:var(--bg);border-radius:12px;padding:14px;margin-bottom:22px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 label{font-size:13px;font-weight:500;color:var(--mute);display:block;margin-bottom:3px}
@@ -76,7 +76,7 @@ h3{font-size:15px;margin:0 0 12px}
 <div class="wrap">
   <div class="top">
     <div><h1>Influencer conversations</h1><p class="sub">The latest on every influencer, in one place for the whole team.</p></div>
-    <div><button class="g" id="out" hidden>Sign out</button> <button id="exp">Export to Excel</button> <button class="p" id="add">Add influencer</button></div>
+    <div><button class="g" id="out" hidden>Sign out</button> <button id="bulk">Update followers</button> <button id="exp">Export to Excel</button> <button class="p" id="add">Add influencer</button></div>
   </div>
   <div id="err" class="err" hidden></div>
   <div class="tools"><input id="q" type="search" placeholder="Search name, handle or notes"><div class="chips" id="chips"></div></div>
@@ -85,7 +85,7 @@ h3{font-size:15px;margin:0 0 12px}
     <aside class="panel" id="panel"><div class="side" id="side"><div class="ph">Select an influencer to see their history and log a new conversation.</div></div></aside>
   </div>
 </div>
-<div class="meta" style="text-align:center;padding:0 0 24px">Version 6</div>
+<div class="meta" style="text-align:center;padding:0 0 24px">Version 7</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const STATUSES=["Prospect","In conversation","Follow-up","Negotiating","Confirmed","Live / delivered","On hold","Declined"];
@@ -115,6 +115,39 @@ function igUrl(v){
 function igName(u){try{const p=new URL(u).pathname.split("/").filter(Boolean);return p[0]&&!["p","reel","reels","stories"].includes(p[0])?"@"+p[0]:"Instagram"}catch(x){return "Instagram"}}
 //'const igv=$("ig").value.trim(),ig=igUrl(igv);if(igv&&!ig){alert("Please enter a valid Instagram link or @handle.");$("ig").focus();return}\n    '
 const igOf=i=>i.instagram||igUrl(i.handle);
+function parseFol(v){
+  v=String(v||"").trim().toLowerCase().replace(/[,\s]/g,"");
+  if(!v)return "";
+  const m=/^(\d+(?:\.\d+)?)([km]?)$/.exec(v);
+  if(!m)return null;
+  return String(Math.round(Number(m[1])*(m[2]==="k"?1e3:m[2]==="m"?1e6:1)));
+}
+function fmtFol(v){const n=Number(v);return n>=1e6?(+(n/1e6).toFixed(1))+"M":n>=1e3?(+(n/1e3).toFixed(1))+"K":String(n)}
+const igLink=i=>{const u=igOf(i);return /^https?:\/\//i.test(u||"")?`<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(igName(u))} ↗</a>`:"No Instagram link"};
+function bulkFollowers(){
+  openId=null;$("panel").classList.add("open");
+  const rows=[...infs].sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  $("side").innerHTML=`<button class="g" id="close">← All influencers</button><h2 style="margin:12px 0 4px">Update followers</h2>
+    <p class="meta" style="margin:0 0 12px">Open their profile, check the count and type it in. Examples: 12500, 12.5K, 1.2M. Leave blank to skip.</p>
+    <div>${rows.map(i=>`<div class="brow"><div><div class="name">${esc(i.name)}</div><div class="meta">${igLink(i)}${i.followersAt?" · updated "+esc(fmtD(i.followersAt)):""}</div></div><input data-id="${esc(i.id)}" data-old="${esc(i.followers||"")}" value="${esc(i.followers||"")}" inputmode="decimal" placeholder="Followers"></div>`).join("")}</div>
+    <button class="p" id="bsave" style="margin-top:14px">Save followers</button>`;
+  $("close").onclick=closePanel;
+  $("bsave").onclick=async()=>{
+    const items=[];let bad=null;
+    document.querySelectorAll("#side .brow input").forEach(inp=>{
+      const raw=inp.value.trim(),old=inp.dataset.old;
+      if(raw===old)return;
+      const v=parseFol(raw);
+      if(v===null){bad=bad||inp;return}
+      if(v!==old)items.push({id:inp.dataset.id,followers:v});
+    });
+    if(bad){alert("One of the follower counts isn't a valid number. Use digits, or K / M like 12.5K.");bad.focus();return}
+    if(!items.length){closePanel();return}
+    $("bsave").disabled=true;
+    try{await write("followers","influencers",items);closePanel()}
+    catch(e){showErr("Couldn't save followers ("+(e.code||"error")+")");$("bsave").disabled=false}
+  };
+}
 function syncFu(){const f=$("fu"),t=$("fud");if(f&&t)t.textContent=fmtD(f.value)||"Pick a date"}
 const who=id=>id?(id===myId?"You":String(id).split("@")[0]):"a teammate";
 const ini=n=>n.split(/\s+/).slice(0,2).map(w=>w[0]||"").join("").toUpperCase()||"?";
@@ -136,7 +169,7 @@ function render(){
   $("list").innerHTML=rows.length?rows.map(i=>{
     const due=i.followUp&&i.followUp<=today();
     return `<div class="item ${i.id===openId?"sel":""}" data-id="${esc(i.id)}"><div class="av">${esc(ini(i.name))}</div>
-      <div><div class="name">${esc(i.name)} <span class="meta">${esc([i.id,igOf(i)?igName(igOf(i)):"",i.platform,i.agency].filter(Boolean).join(" · "))}</span></div>
+      <div><div class="name">${esc(i.name)} <span class="meta">${esc([i.id,igOf(i)?igName(igOf(i)):"",i.followers?fmtFol(i.followers)+" followers":"",i.platform,i.agency].filter(Boolean).join(" · "))}</span></div>
       <div class="snip">${i.lastNote?esc(i.lastNote):"No conversations logged yet."}</div></div>
       <div class="right"><div class="pill">${dot(i.status)}${esc(i.status)}</div><div>${rel(i.lastAt)}${i.lastBy?" · "+esc(who(i.lastBy)):""}</div>${i.followUp?`<div class="${due?"due":""}">Follow up ${esc(fmtD(i.followUp))}</div>`:""}</div></div>`}).join(""):`<div class="empty">${infs.length?"No influencers match your search.":"No influencers yet. Add the first one to start logging conversations."}</div>`;
   if(openId)renderPanel();
@@ -151,7 +184,7 @@ function renderPanel(){
   $("side").innerHTML=`
     <div class="two" style="grid-template-columns:auto auto;justify-content:space-between"><button class="g" id="close">← All influencers</button><span><button class="g" id="edit">Edit details</button><button class="g" id="del">Delete</button></span></div>
     <div class="head"><div class="av">${esc(ini(i.name))}</div><div><h2>${esc(i.name)}</h2><div class="meta">${esc([i.id,i.platform].filter(Boolean).join(" · "))}</div></div></div>
-    <div class="facts">${[["Agency",i.agency],["Cost",i.cost],["Phone",i.phone],["Email",i.email],["Instagram",igOf(i),/^https?:\/\//i.test(igOf(i)||"")?`<a href="${esc(igOf(i))}" target="_blank" rel="noopener noreferrer">${esc(igName(igOf(i)))} ↗</a>`:""]].filter(f=>f[1]).map(f=>`<div><div class="meta">${f[0]}</div><div>${f[2]||esc(f[1])}</div></div>`).join("")}</div>
+    <div class="facts">${[["Agency",i.agency],["Cost",i.cost],["Phone",i.phone],["Email",i.email],["Instagram",igOf(i),/^https?:\/\//i.test(igOf(i)||"")?`<a href="${esc(igOf(i))}" target="_blank" rel="noopener noreferrer">${esc(igName(igOf(i)))} ↗</a>`:""],["Followers",i.followers?Number(i.followers).toLocaleString("en-IN")+(i.followersAt?" (as of "+fmtD(i.followersAt)+")":""):""]].filter(f=>f[1]).map(f=>`<div><div class="meta">${f[0]}</div><div>${f[2]||esc(f[1])}</div></div>`).join("")}</div>
     <div class="form">
       <div class="two"><div><label>Channel</label><select id="ch">${CHANNELS.map(c=>`<option>${c}</option>`).join("")}</select></div>
       <div><label>Status</label><select id="st">${STATUSES.map(s=>`<option ${s===i.status?"selected":""}>${s}</option>`).join("")}</select></div></div>
@@ -191,7 +224,7 @@ function editInf(){
     <div class="form">
       <div><label>Name</label><input id="n" value="${esc(i.name)}"></div>
       <div><label>Platform</label><input id="pl" value="${esc(i.platform)}"></div>
-      <div class="two"><div><label>Email</label><input id="em" value="${esc(i.email)}"></div><div><label>Phone number</label><input id="ph" value="${esc(i.phone)}"></div></div><div class="two"><div><label>Agency</label><input id="ag" value="${esc(i.agency)}"></div><div><label>Cost or fee</label><input id="co" value="${esc(i.cost)}" placeholder="e.g. ₹50,000"></div></div><div><label>Instagram link or @handle</label><input id="ig" value="${esc(igOf(i))}" placeholder="https://instagram.com/name"></div>
+      <div class="two"><div><label>Email</label><input id="em" value="${esc(i.email)}"></div><div><label>Phone number</label><input id="ph" value="${esc(i.phone)}"></div></div><div class="two"><div><label>Agency</label><input id="ag" value="${esc(i.agency)}"></div><div><label>Cost or fee</label><input id="co" value="${esc(i.cost)}" placeholder="e.g. ₹50,000"></div></div><div><label>Instagram link or @handle</label><input id="ig" value="${esc(igOf(i))}" placeholder="https://instagram.com/name"></div><div><label>Followers (optional)</label><input id="fo" inputmode="decimal" value="${esc(i.followers||"")}" placeholder="e.g. 12500 or 12.5K"></div>
       <div><label>Status</label><select id="st">${STATUSES.map(s=>`<option ${s===i.status?"selected":""}>${s}</option>`).join("")}</select></div>
       <button class="p" id="upd">Save changes</button>
     </div>`;
@@ -199,9 +232,10 @@ function editInf(){
   $("upd").onclick=async()=>{
     const name=$("n").value.trim();if(!name){$("n").focus();return}
     const igv=$("ig").value.trim(),ig=igUrl(igv);if(igv&&!ig){alert("Please enter a valid Instagram link or @handle.");$("ig").focus();return}
+    const fol=parseFol($("fo").value);if(fol===null){alert("Followers must be a number, like 12500 or 12.5K.");$("fo").focus();return}
     $("upd").disabled=true;
     const {id,...rest}=i;
-    try{await db.doc("influencers/"+id).set({...rest,name,platform:$("pl").value.trim(),email:$("em").value.trim(),phone:$("ph").value.trim(),agency:$("ag").value.trim(),cost:$("co").value.trim(),instagram:ig,status:$("st").value});editing=false;render()}
+    try{await db.doc("influencers/"+id).set({...rest,name,platform:$("pl").value.trim(),email:$("em").value.trim(),phone:$("ph").value.trim(),agency:$("ag").value.trim(),cost:$("co").value.trim(),instagram:ig,followers:fol,followersAt:fol===String(i.followers||"")?(i.followersAt||0):(fol?Date.now():0),status:$("st").value});editing=false;render()}
     catch(e){showErr("Couldn't save changes ("+(e.code||"error")+")");$("upd").disabled=false}
   };
 }
@@ -218,7 +252,7 @@ function addInfluencer(){
     <div class="form">
       <div><label>Name</label><input id="n"></div>
       <div><label>Platform</label><input id="pl" placeholder="Instagram, YouTube"></div>
-      <div class="two"><div><label>Email</label><input id="em"></div><div><label>Phone number</label><input id="ph"></div></div><div class="two"><div><label>Agency</label><input id="ag"></div><div><label>Cost or fee</label><input id="co" placeholder="e.g. ₹50,000"></div></div><div><label>Instagram link or @handle</label><input id="ig" placeholder="https://instagram.com/name"></div>
+      <div class="two"><div><label>Email</label><input id="em"></div><div><label>Phone number</label><input id="ph"></div></div><div class="two"><div><label>Agency</label><input id="ag"></div><div><label>Cost or fee</label><input id="co" placeholder="e.g. ₹50,000"></div></div><div><label>Instagram link or @handle</label><input id="ig" placeholder="https://instagram.com/name"></div><div><label>Followers (optional)</label><input id="fo" inputmode="decimal" placeholder="e.g. 12500 or 12.5K"></div>
       <div><label>Status</label><select id="st">${STATUSES.map(s=>`<option>${s}</option>`).join("")}</select></div>
       <button class="p" id="create">Add influencer</button>
     </div>`;
@@ -226,8 +260,9 @@ function addInfluencer(){
   $("create").onclick=async()=>{
     const name=$("n").value.trim();if(!name){$("n").focus();return}
     const igv=$("ig").value.trim(),ig=igUrl(igv);if(igv&&!ig){alert("Please enter a valid Instagram link or @handle.");$("ig").focus();return}
+    const fol=parseFol($("fo").value);if(fol===null){alert("Followers must be a number, like 12500 or 12.5K.");$("fo").focus();return}
     $("create").disabled=true;
-    try{const ref=await db.collection("influencers").add({name,platform:$("pl").value.trim(),email:$("em").value.trim(),phone:$("ph").value.trim(),agency:$("ag").value.trim(),cost:$("co").value.trim(),instagram:ig,status:$("st").value,createdAt:Date.now(),lastAt:0,lastNote:"",lastBy:"",nextStep:"",followUp:""});openPanel(ref.id)}
+    try{const ref=await db.collection("influencers").add({name,platform:$("pl").value.trim(),email:$("em").value.trim(),phone:$("ph").value.trim(),agency:$("ag").value.trim(),cost:$("co").value.trim(),instagram:ig,followers:fol,followersAt:fol?Date.now():0,status:$("st").value,createdAt:Date.now(),lastAt:0,lastNote:"",lastBy:"",nextStep:"",followUp:""});openPanel(ref.id)}
     catch(e){showErr("Couldn't add the influencer ("+(e.code||"error")+")");closePanel()}
   };
 }
@@ -235,7 +270,7 @@ const loaders=[];
 const API="https://script.google.com/macros/s/AKfycbwgvLWt-wa7k9hMSJzJ-OVgKocGNZ_QQVgEOP_EL7nH-1gy2dfmKX6DqKFkBgo7ji9o/exec";
 let AUTH=null;
 async function gs(fn,...a){
-  const body={fn,email:AUTH.email,password:AUTH.password,n:a[0],id:fn==="put"||fn==="del"?a[1]:undefined,d:fn==="add"?a[1]:fn==="put"?a[2]:undefined};
+  const body={fn,email:AUTH.email,password:AUTH.password,n:a[0],id:fn==="put"||fn==="del"?a[1]:undefined,d:fn==="add"?a[1]:fn==="put"?a[2]:fn==="followers"?a[1]:undefined};
   let r,j;
   try{r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)})}catch(x){throw {code:"network"}}
   try{j=await r.json()}catch(x){throw {code:"not-json"}}
@@ -256,7 +291,7 @@ function exportXlsx(){
   if(!window.XLSX){showErr("The Excel export tool didn't load. Check your internet connection and try again.");return}
   if(!infs.length){showErr("There is nothing to export yet.");return}
   const nm=Object.fromEntries(infs.map(i=>[i.id,i.name]));
-  const people=[...infs].sort((a,b)=>(b.lastAt||0)-(a.lastAt||0)).map(i=>({"ID":i.id,"Name":i.name,"Instagram":igOf(i),"Platform":i.platform,"Agency":i.agency,"Email":i.email,"Phone":i.phone,"Cost":i.cost,"Status":i.status,"Last contact":fmtD(i.lastAt),"Last contacted by":i.lastBy?who(i.lastBy):"","Last note":i.lastNote,"Next step":i.nextStep,"Follow up by":fmtD(i.followUp),"Added on":fmtD(i.createdAt)}));
+  const people=[...infs].sort((a,b)=>(b.lastAt||0)-(a.lastAt||0)).map(i=>({"ID":i.id,"Name":i.name,"Instagram":igOf(i),"Followers":i.followers?Number(i.followers):"","Followers updated":fmtD(i.followersAt),"Platform":i.platform,"Agency":i.agency,"Email":i.email,"Phone":i.phone,"Cost":i.cost,"Status":i.status,"Last contact":fmtD(i.lastAt),"Last contacted by":i.lastBy?who(i.lastBy):"","Last note":i.lastNote,"Next step":i.nextStep,"Follow up by":fmtD(i.followUp),"Added on":fmtD(i.createdAt)}));
   const convos=[...logs].sort((a,b)=>b.at-a.at).map(l=>({"Influencer ID":l.inf,"Influencer":nm[l.inf]||"(deleted)","Date":fmtD(l.at),"Time":new Date(l.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),"Channel":l.channel,"Notes":l.note,"Next step":l.nextStep,"Follow up by":fmtD(l.followUp),"Logged by":l.by?who(l.by):""}));
   const sheet=rows=>{const ws=XLSX.utils.json_to_sheet(rows);ws["!cols"]=Object.keys(rows[0]||{}).map(k=>({wch:Math.min(50,rows.reduce((m,r)=>Math.max(m,String(r[k]??"").length),k.length)+2)}));return ws};
   const wb=XLSX.utils.book_new();
@@ -277,7 +312,7 @@ function askLogin(){return new Promise(res=>{
   $("go").onclick=go;$("lp").onkeydown=e=>{if(e.key==="Enter")go()};
 })}
 async function init(){
-  $("q").oninput=render;$("add").onclick=addInfluencer;$("exp").onclick=exportXlsx;
+  $("q").oninput=render;$("add").onclick=addInfluencer;$("exp").onclick=exportXlsx;$("bulk").onclick=bulkFollowers;
   $("chips").onclick=e=>{const c=e.target.closest(".chip");if(c){fsv=c.dataset.s;render()}};
   $("list").onclick=e=>{const c=e.target.closest(".item");if(c)openPanel(c.dataset.id)};
   if(API.startsWith("PASTE")){$("list").innerHTML='<div class="empty">The page is live, but the Google Sheet is not connected yet.</div>';$("add").disabled=true;return}
