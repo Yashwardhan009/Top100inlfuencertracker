@@ -46,7 +46,7 @@ button:disabled{opacity:.5;cursor:default}
 .side{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;max-height:calc(100vh - 32px);overflow-y:auto}
 .head{display:flex;gap:12px;align-items:center;margin:8px 0 16px}.head .av{width:48px;height:48px;font-size:16px}
 .head h2{margin:0;font-size:20px;letter-spacing:-.01em}
-.facts{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin:-4px 0 18px}.facts:empty{display:none}.facts>div{overflow-wrap:anywhere}.filters[hidden],.fuctl[hidden]{display:none}#ftog.on{border-color:var(--accent);color:var(--accent)}.tabs{display:flex;gap:4px;margin-bottom:12px;border-bottom:1px solid var(--line)}.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;padding:8px 14px;color:var(--mute);font-weight:600}.tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}.bdg{background:var(--accent);color:var(--accent-ink);border-radius:99px;padding:0 7px;font-size:12px;margin-left:4px}.fuctl{display:flex;gap:8px;align-items:center;margin-bottom:12px}.fuctl select{width:auto}.gh{padding:9px 16px;font-weight:700;font-size:13px;background:var(--bg);color:var(--mute);border-bottom:1px solid var(--line)}.gh.due{color:var(--warn)}body.fu .chips,body.fu #ftog,body.fu #filters{display:none!important}.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.filters select{width:auto;max-width:210px;padding:7px 10px;font-size:14px}.srow{display:flex;justify-content:space-between;align-items:center;width:100%;padding:9px 2px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:none;text-align:left}.sbtn{cursor:pointer}.sbtn:hover{color:var(--accent)}.brow{display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.brow a{color:var(--accent);text-decoration:none}.facts a{color:var(--accent);font-weight:500;text-decoration:none}.facts a:hover{text-decoration:underline}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin:-4px 0 18px}.facts:empty{display:none}.facts>div{overflow-wrap:anywhere}.chk{display:flex;gap:8px;align-items:center;margin:0;font-size:14px;color:var(--ink);cursor:pointer}.chk input{width:auto}.filters[hidden],.fuctl[hidden]{display:none}#ftog.on{border-color:var(--accent);color:var(--accent)}.tabs{display:flex;gap:4px;margin-bottom:12px;border-bottom:1px solid var(--line)}.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;padding:8px 14px;color:var(--mute);font-weight:600}.tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}.bdg{background:var(--accent);color:var(--accent-ink);border-radius:99px;padding:0 7px;font-size:12px;margin-left:4px}.fuctl{display:flex;gap:8px;align-items:center;margin-bottom:12px}.fuctl select{width:auto}.gh{padding:9px 16px;font-weight:700;font-size:13px;background:var(--bg);color:var(--mute);border-bottom:1px solid var(--line)}.gh.due{color:var(--warn)}body.fu .chips,body.fu #ftog,body.fu #filters{display:none!important}.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.filters select{width:auto;max-width:210px;padding:7px 10px;font-size:14px}.srow{display:flex;justify-content:space-between;align-items:center;width:100%;padding:9px 2px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:none;text-align:left}.sbtn{cursor:pointer}.sbtn:hover{color:var(--accent)}.brow{display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.brow a{color:var(--accent);text-decoration:none}.facts a{color:var(--accent);font-weight:500;text-decoration:none}.facts a:hover{text-decoration:underline}
 .form{display:grid;gap:10px;background:var(--bg);border-radius:12px;padding:14px;margin-bottom:22px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 label{font-size:13px;font-weight:500;color:var(--mute);display:block;margin-bottom:3px}
@@ -89,7 +89,7 @@ h3{font-size:15px;margin:0 0 12px}
     <aside class="panel" id="panel"><div class="side" id="side"><div class="ph">Select an influencer to see their history and log a new conversation.</div></div></aside>
   </div>
 </div>
-<div class="meta" style="text-align:center;padding:0 0 24px">Version 9</div>
+<div class="meta" style="text-align:center;padding:0 0 24px">Version 10</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const STATUSES=["Prospect","In conversation","Follow-up","Negotiating","Confirmed","Live / delivered","On hold","Declined"];
@@ -241,6 +241,15 @@ function renderFu(){
   $("count").textContent=rows.length+" follow-up"+(rows.length===1?"":"s");
   $("list").innerHTML=rows.length?G.map(([l,f,c])=>{const g=rows.filter(f);return g.length?`<div class="gh ${c}">${l} (${g.length})</div>`+g.map(fuRow).join(""):""}).join(""):`<div class="empty">No follow-ups ${fuWho==="me"?"assigned to you. Choose Everyone to see the whole team.":"found."}</div>`;
 }
+function syncNoFu(){
+  const c=$("nofu");if(!c)return;
+  const on=c.checked;
+  $("fu").disabled=on;
+  if(on){$("fu").value="";syncFu()}
+  $("lnext").textContent=on?"Next step (optional)":"Next step (required)";
+  $("lfu").textContent=on?"Follow up by (not needed)":"Follow up by (required)";
+  const d=document.querySelector(".dp");if(d)d.style.opacity=on?".5":"1";
+}
 function syncFu(){const f=$("fu"),t=$("fud");if(f&&t)t.textContent=fmtD(f.value)||"Pick a date"}
 const who=id=>id?(id===myId?"You":String(id).split("@")[0]):"a teammate";
 const ini=n=>n.split(/\s+/).slice(0,2).map(w=>w[0]||"").join("").toUpperCase()||"?";
@@ -277,7 +286,7 @@ function renderPanel(){
   if(!i){closePanel();return}
   $("panel").classList.add("open");
   const my=logs.filter(l=>l.inf===openId).sort((a,b)=>b.at-a.at);
-  const keep=$("note")?$("note").value:"",keepN=$("next")?$("next").value:"",keepF=$("fu")?$("fu").value:"";
+  const keep=$("note")?$("note").value:"",keepN=$("next")?$("next").value:"",keepF=$("fu")?$("fu").value:"",keepC=$("nofu")?$("nofu").checked:false;
   $("side").innerHTML=`
     <div class="two" style="grid-template-columns:auto auto;justify-content:space-between"><button class="g" id="close">← All influencers</button><span><button class="g" id="edit">Edit details</button><button class="g" id="del">Delete</button></span></div>
     <div class="head"><div class="av">${esc(ini(i.name))}</div><div><h2>${esc(i.name)}</h2><div class="meta">${esc([i.id,i.platform].filter(Boolean).join(" · "))}</div></div></div>
@@ -286,22 +295,23 @@ function renderPanel(){
       <div class="two"><div><label>Channel</label><select id="ch">${CHANNELS.map(c=>`<option>${c}</option>`).join("")}</select></div>
       <div><label>Status</label><select id="st">${STATUSES.map(s=>`<option ${s===i.status?"selected":""}>${s}</option>`).join("")}</select></div></div>
       <div><label>What was discussed</label><textarea id="note" rows="4" placeholder="Summary, rates quoted, concerns, agreements"></textarea></div>
-      <div class="two"><div><label>Next step (required)</label><input id="next" placeholder="Send contract"></div><div><label>Follow up by (required)</label><div class="dp"><span class="dpt" id="fud">Pick a date</span><input id="fu" type="date" min="${today()}"></div></div></div>
+      <div class="two"><div><label id="lnext">Next step (required)</label><input id="next" placeholder="Send contract"></div><div><label id="lfu">Follow up by (required)</label><div class="dp"><span class="dpt" id="fud">Pick a date</span><input id="fu" type="date" min="${today()}"></div></div></div>
+      <label class="chk"><input type="checkbox" id="nofu"> No follow-up needed</label>
       <div class="meta" id="hint" style="color:var(--warn)"></div>
       <button class="p" id="save">Log conversation</button>
     </div>
     <h3>History (${my.length})</h3>
-    ${my.length?`<div class="tl">${my.map(l=>`<div class="log"><div class="meta"><b style="color:var(--ink)">${esc(l.channel)}</b> · ${fmtT(l.at)} · ${esc(who(l.by))}</div><div class="note">${esc(l.note)}</div>${l.nextStep?`<span class="next">Next: ${esc(l.nextStep)}${l.followUp?" by "+esc(fmtD(l.followUp)):""}</span>`:""}</div>`).join("")}</div>`:'<div class="meta">Nothing logged yet. Your first entry will appear here.</div>'}`;
-  if(keep)$("note").value=keep;if(keepN)$("next").value=keepN;if(keepF)$("fu").value=keepF;$("fu").onclick=()=>{try{$("fu").showPicker()}catch(x){}};$("fu").onchange=syncFu;syncFu();
+    ${my.length?`<div class="tl">${my.map(l=>`<div class="log"><div class="meta"><b style="color:var(--ink)">${esc(l.channel)}</b> · ${fmtT(l.at)} · ${esc(who(l.by))}</div><div class="note">${esc(l.note)}</div>${l.nextStep?`<span class="next">Next: ${esc(l.nextStep)}${l.followUp?" by "+esc(fmtD(l.followUp)):""}</span>`:""}${l.followUp?"":` <span class="next">No follow-up needed</span>`}</div>`).join("")}</div>`:'<div class="meta">Nothing logged yet. Your first entry will appear here.</div>'}`;
+  if(keep)$("note").value=keep;if(keepN)$("next").value=keepN;if(keepF)$("fu").value=keepF;$("fu").onclick=()=>{try{$("fu").showPicker()}catch(x){}};$("fu").onchange=syncFu;syncFu();$("nofu").checked=keepC;$("nofu").onchange=syncNoFu;syncNoFu();
   $("close").onclick=closePanel;$("del").onclick=delInf;$("edit").onclick=editInf;$("save").onclick=saveLog;
 }
 function openPanel(id){editing=false;openId=id;render()}
 function closePanel(){editing=false;openId=null;$("panel").classList.remove("open");$("side").innerHTML=PH;render()}
 async function saveLog(){
   const note=$("note").value.trim();
-  const miss=[["note",note],["next",$("next").value.trim()],["fu",$("fu").value]].filter(x=>!x[1]);
+  const nof=$("nofu").checked,miss=[["note",note]].concat(nof?[]:[["next",$("next").value.trim()],["fu",$("fu").value]]).filter(x=>!x[1]);
   ["note","next","fu"].forEach(k=>$(k).classList.toggle("bad",miss.some(m=>m[0]===k)));
-  if(miss.length){$("hint").textContent="Add what was discussed, a next step and a follow-up date to log this conversation.";$(miss[0][0]).focus();return}
+  if(miss.length){$("hint").textContent=nof?"Add what was discussed to log this conversation.":"Add what was discussed, a next step and a follow-up date, or tick No follow-up needed.";$(miss[0][0]).focus();return}
   const i=infs.find(x=>x.id===openId);
   const now=Date.now(),next=$("next").value.trim(),fu=$("fu").value,st=$("st").value;
   $("save").disabled=true;
@@ -309,7 +319,7 @@ async function saveLog(){
     await db.collection("logs").add({inf:i.id,at:now,channel:$("ch").value,note,nextStep:next,followUp:fu,by:myId||""});
     const {id,...rest}=i;
     await db.doc("influencers/"+id).set({...rest,status:st,lastAt:now,lastNote:note,lastBy:myId||"",nextStep:next,followUp:fu});
-    $("note").value="";$("next").value="";$("fu").value="";syncFu();
+    $("note").value="";$("next").value="";$("fu").value="";$("nofu").checked=false;syncNoFu();
   }catch(e){showErr("Couldn't save the conversation ("+(e.code||"error")+"). You may have view-only access; ask the owner for Contributor access.")}
   const b=$("save");if(b)b.disabled=false;
 }
