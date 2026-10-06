@@ -46,7 +46,7 @@ button:disabled{opacity:.5;cursor:default}
 .side{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;max-height:calc(100vh - 32px);overflow-y:auto}
 .head{display:flex;gap:12px;align-items:center;margin:8px 0 16px}.head .av{width:48px;height:48px;font-size:16px}
 .head h2{margin:0;font-size:20px;letter-spacing:-.01em}
-.facts{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin:-4px 0 18px}.facts:empty{display:none}.facts>div{overflow-wrap:anywhere}.brow{display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.brow a{color:var(--accent);text-decoration:none}.facts a{color:var(--accent);font-weight:500;text-decoration:none}.facts a:hover{text-decoration:underline}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin:-4px 0 18px}.facts:empty{display:none}.facts>div{overflow-wrap:anywhere}.filters[hidden],.fuctl[hidden]{display:none}#ftog.on{border-color:var(--accent);color:var(--accent)}.tabs{display:flex;gap:4px;margin-bottom:12px;border-bottom:1px solid var(--line)}.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;padding:8px 14px;color:var(--mute);font-weight:600}.tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}.bdg{background:var(--accent);color:var(--accent-ink);border-radius:99px;padding:0 7px;font-size:12px;margin-left:4px}.fuctl{display:flex;gap:8px;align-items:center;margin-bottom:12px}.fuctl select{width:auto}.gh{padding:9px 16px;font-weight:700;font-size:13px;background:var(--bg);color:var(--mute);border-bottom:1px solid var(--line)}.gh.due{color:var(--warn)}body.fu .chips,body.fu #ftog,body.fu #filters{display:none!important}.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.filters select{width:auto;max-width:210px;padding:7px 10px;font-size:14px}.srow{display:flex;justify-content:space-between;align-items:center;width:100%;padding:9px 2px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:none;text-align:left}.sbtn{cursor:pointer}.sbtn:hover{color:var(--accent)}.brow{display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.brow a{color:var(--accent);text-decoration:none}.facts a{color:var(--accent);font-weight:500;text-decoration:none}.facts a:hover{text-decoration:underline}
 .form{display:grid;gap:10px;background:var(--bg);border-radius:12px;padding:14px;margin-bottom:22px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 label{font-size:13px;font-weight:500;color:var(--mute);display:block;margin-bottom:3px}
@@ -76,16 +76,20 @@ h3{font-size:15px;margin:0 0 12px}
 <div class="wrap">
   <div class="top">
     <div><h1>Influencer conversations</h1><p class="sub">The latest on every influencer, in one place for the whole team.</p></div>
-    <div><button class="g" id="out" hidden>Sign out</button> <button id="bulk">Update followers</button> <button id="exp">Export to Excel</button> <button class="p" id="add">Add influencer</button></div>
+    <div><button class="g" id="out" hidden>Sign out</button> <button id="sum">Summary</button> <button id="bulk">Update followers</button> <button id="exp">Export to Excel</button> <button class="p" id="add">Add influencer</button></div>
   </div>
   <div id="err" class="err" hidden></div>
-  <div class="tools"><input id="q" type="search" placeholder="Search name, handle or notes"><div class="chips" id="chips"></div></div>
+  <div class="tabs"><button id="t-all">All influencers</button><button id="t-fu">Follow-ups</button></div>
+  <div class="fuctl" id="fuctl" hidden><label style="margin:0">Follow-ups for</label><select id="fu-who"></select></div>
+  <div class="tools"><input id="q" type="search" placeholder="Search name, Instagram or notes"><button id="ftog">Filters</button><div class="chips" id="chips"></div></div>
+  <div class="filters" id="filters" hidden></div>
+  <div class="meta" id="count" style="margin:0 0 10px"></div>
   <div class="layout">
     <div class="list" id="list"><div class="empty">Loading…</div></div>
     <aside class="panel" id="panel"><div class="side" id="side"><div class="ph">Select an influencer to see their history and log a new conversation.</div></div></aside>
   </div>
 </div>
-<div class="meta" style="text-align:center;padding:0 0 24px">Version 7</div>
+<div class="meta" style="text-align:center;padding:0 0 24px">Version 9</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const STATUSES=["Prospect","In conversation","Follow-up","Negotiating","Confirmed","Live / delivered","On hold","Declined"];
@@ -96,7 +100,7 @@ let db=null,user=null,myId=null,infs=[],logs=[],openId=null,names={},fsv="",edit
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmtT=t=>t?new Date(t).toLocaleString(undefined,{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}):"";
-const today=()=>new Date().toISOString().slice(0,10);
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
 function fmtD(v){
   if(!v)return "";
@@ -148,6 +152,95 @@ function bulkFollowers(){
     catch(e){showErr("Couldn't save followers ("+(e.code||"error")+")");$("bsave").disabled=false}
   };
 }
+const flt={email:"",phone:"",ig:"",fol:"",agency:"",platform:""};
+let fsig="";
+const has=v=>String(v||"").trim()!=="";
+const ak=v=>String(v||"").trim().toLowerCase();
+function passes(i){
+  const f=flt;
+  if(f.email&&(f.email==="yes")!==has(i.email))return false;
+  if(f.phone&&(f.phone==="yes")!==has(i.phone))return false;
+  if(f.ig&&(f.ig==="yes")!==!!igOf(i))return false;
+  if(f.agency){const a=ak(i.agency);if(f.agency==="__none"?a!=="":a!==f.agency)return false}
+  if(f.platform&&ak(i.platform)!==f.platform)return false;
+  if(f.fol){
+    const n=has(i.followers)?Number(i.followers):null;
+    if(f.fol==="none"){if(n!==null)return false}
+    else{
+      if(n===null)return false;
+      if(f.fol==="lt10k"&&!(n<1e4))return false;
+      if(f.fol==="10k-1l"&&!(n>=1e4&&n<1e5))return false;
+      if(f.fol==="gte1l"&&!(n>=1e5))return false;
+      if(f.fol==="gte10l"&&!(n>=1e6))return false;
+    }
+  }
+  return true;
+}
+const uniq=arr=>{const m=new Map();arr.forEach(v=>{const t=String(v||"").trim();if(t&&!m.has(t.toLowerCase()))m.set(t.toLowerCase(),t)});return [...m].sort((a,b)=>a[1].localeCompare(b[1]))};
+function buildFilters(){
+  const ag=uniq(infs.map(i=>i.agency)),pl=uniq(infs.map(i=>i.platform));
+  const sig=JSON.stringify([ag,pl]);
+  if(sig===fsig)return;fsig=sig;
+  const yn=(id,label,v)=>`<select id="${id}"><option value="">${label}: any</option><option value="yes" ${v==="yes"?"selected":""}>${label}: available</option><option value="no" ${v==="no"?"selected":""}>${label}: missing</option></select>`;
+  const opts=(list,v)=>list.map(([k,t])=>`<option value="${esc(k)}" ${v===k?"selected":""}>${esc(t)}</option>`).join("");
+  const FOL=[["","Followers: any"],["lt10k","Under 10K"],["10k-1l","10K to 1 lakh"],["gte1l","1 lakh and above"],["gte10l","10 lakh and above"],["none","No count yet"]];
+  $("filters").innerHTML=yn("f-email","Email",flt.email)+yn("f-phone","Phone",flt.phone)+yn("f-ig","Instagram",flt.ig)
+    +`<select id="f-fol">${FOL.map(([k,t])=>`<option value="${k}" ${flt.fol===k?"selected":""}>${t}</option>`).join("")}</select>`
+    +`<select id="f-agency"><option value="">Agency: any</option><option value="__none" ${flt.agency==="__none"?"selected":""}>No agency</option>${opts(ag,flt.agency)}</select>`
+    +`<select id="f-platform"><option value="">Platform: any</option>${opts(pl,flt.platform)}</select>`
+    +`<button class="g" id="f-clear">Clear filters</button>`;
+}
+function curRows(){
+  const q=$("q").value.toLowerCase();
+  return infs.filter(i=>(!fsv||i.status===fsv)&&passes(i)&&(!q||[i.id,i.name,igOf(i),i.platform,i.agency,i.phone,i.lastNote].join(" ").toLowerCase().includes(q)));
+}
+function showSummary(){
+  openId=null;$("panel").classList.add("open");
+  const r=curRows(),n=r.length,cnt=f=>r.filter(f).length;
+  const by=new Map();
+  r.forEach(i=>{const t=String(i.agency||"").trim(),k=t?t.toLowerCase():"__none",e=by.get(k)||{k,t:t||"No agency",c:0};e.c++;by.set(k,e)});
+  const ag=[...by.values()].sort((a,b)=>b.c-a.c);
+  const stat=(l,v)=>`<div class="srow"><span>${l}</span><b>${v}</b></div>`;
+  const on=Object.values(flt).some(Boolean)||fsv||$("q").value;
+  $("side").innerHTML=`<button class="g" id="close">← All influencers</button><h2 style="margin:12px 0 4px">Summary</h2>
+    <p class="meta" style="margin:0 0 12px">${on?"Based on your current filters and search.":"All influencers."}</p>
+    ${stat("Influencers",n)}${stat("Email available",cnt(i=>has(i.email)))}${stat("Phone available",cnt(i=>has(i.phone)))}${stat("Instagram link added",cnt(i=>igOf(i)))}${stat("1 lakh+ followers",cnt(i=>has(i.followers)&&Number(i.followers)>=1e5))}${stat("No follower count yet",cnt(i=>!has(i.followers)))}
+    <h3 style="margin:18px 0 6px">By agency (tap to filter)</h3>
+    ${ag.map(a=>`<button class="srow sbtn" data-k="${esc(a.k)}"><span>${esc(a.t)}</span><b>${a.c}</b></button>`).join("")||'<div class="meta">Nothing to show.</div>'}`;
+  $("close").onclick=closePanel;
+  $("side").querySelectorAll(".sbtn").forEach(b=>b.onclick=()=>{flt.agency=b.dataset.k;fsig="";render();showSummary()});
+}
+let view="all",fuWho="me",fwsig="";
+function addDays(iso,n){const [y,m,d]=iso.split("-").map(Number),t=new Date(y,m-1,d+n);return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0")}
+function updTog(){const n=Object.values(flt).filter(Boolean).length;$("ftog").textContent="Filters"+(n?" ("+n+")":"");$("ftog").classList.toggle("on",!$("filters").hidden||n>0)}
+function updTabs(){
+  const t=today(),n=infs.filter(i=>has(i.followUp)&&i.followUp<=t&&i.lastBy&&i.lastBy===myId).length;
+  $("t-fu").innerHTML="Follow-ups"+(n?` <span class="bdg">${n}</span>`:"");
+  $("t-all").classList.toggle("on",view==="all");$("t-fu").classList.toggle("on",view==="fu");
+  $("fuctl").hidden=view!=="fu";
+}
+function setView(v){view=v;document.body.classList.toggle("fu",v==="fu");render()}
+function buildFuWho(){
+  const ppl=[...new Set(infs.filter(i=>has(i.followUp)&&i.lastBy&&i.lastBy!==myId).map(i=>i.lastBy))].sort();
+  const sig=JSON.stringify(ppl)+fuWho;
+  if(sig===fwsig)return;fwsig=sig;
+  $("fu-who").innerHTML=`<option value="me" ${fuWho==="me"?"selected":""}>Me</option><option value="all" ${fuWho==="all"?"selected":""}>Everyone</option>`+ppl.map(e=>`<option value="${esc(e)}" ${fuWho===e?"selected":""}>${esc(who(e))}</option>`).join("");
+}
+const fuRow=i=>`<div class="item ${i.id===openId?"sel":""}" data-id="${esc(i.id)}"><div class="av">${esc(ini(i.name))}</div>
+  <div><div class="name">${esc(i.name)} <span class="meta">${esc([i.id,i.agency].filter(Boolean).join(" · "))}</span></div>
+  ${i.nextStep?`<div class="next" style="margin-top:3px">Next: ${esc(i.nextStep)}</div>`:""}
+  <div class="snip">${esc(i.lastNote||"")}</div></div>
+  <div class="right"><div class="pill">${dot(i.status)}${esc(i.status)}</div><div class="${i.followUp<=today()?"due":""}">${esc(fmtD(i.followUp))}</div><div>${esc(who(i.lastBy))}</div></div></div>`;
+function renderFu(){
+  const q=$("q").value.toLowerCase(),t=today(),w=addDays(t,7);
+  buildFuWho();
+  let rows=infs.filter(i=>has(i.followUp)&&(!q||[i.id,i.name,igOf(i),i.agency,i.nextStep,i.lastNote].join(" ").toLowerCase().includes(q)));
+  if(fuWho==="me")rows=rows.filter(i=>i.lastBy&&i.lastBy===myId);else if(fuWho!=="all")rows=rows.filter(i=>i.lastBy===fuWho);
+  rows.sort((a,b)=>a.followUp.localeCompare(b.followUp));
+  const G=[["Overdue",r=>r.followUp<t,"due"],["Today",r=>r.followUp===t,""],["Next 7 days",r=>r.followUp>t&&r.followUp<=w,""],["Later",r=>r.followUp>w,""]];
+  $("count").textContent=rows.length+" follow-up"+(rows.length===1?"":"s");
+  $("list").innerHTML=rows.length?G.map(([l,f,c])=>{const g=rows.filter(f);return g.length?`<div class="gh ${c}">${l} (${g.length})</div>`+g.map(fuRow).join(""):""}).join(""):`<div class="empty">No follow-ups ${fuWho==="me"?"assigned to you. Choose Everyone to see the whole team.":"found."}</div>`;
+}
 function syncFu(){const f=$("fu"),t=$("fud");if(f&&t)t.textContent=fmtD(f.value)||"Pick a date"}
 const who=id=>id?(id===myId?"You":String(id).split("@")[0]):"a teammate";
 const ini=n=>n.split(/\s+/).slice(0,2).map(w=>w[0]||"").join("").toUpperCase()||"?";
@@ -161,11 +254,15 @@ async function resolveNames(){
   try{const ps=await user.profiles(ids);ids.forEach(i=>{names[i]=(ps[i]&&ps[i].name)||""});}catch(e){}
 }
 function render(){
+  updTabs();
+  if(view==="fu"){renderFu();if(openId)renderPanel();return}
   const q=$("q").value.toLowerCase();
   $("chips").innerHTML=[["",`All`,infs.length]].concat(STATUSES.map(s=>[s,s,infs.filter(i=>i.status===s).length])).filter(c=>c[0]===""||c[2]||c[0]===fsv)
     .map(c=>`<button class="chip ${fsv===c[0]?"on":""}" data-s="${esc(c[0])}">${c[0]?dot(c[0]):""}${esc(c[1])} <b>${c[2]}</b></button>`).join("");
-  const rows=infs.filter(i=>(!fsv||i.status===fsv)&&(!q||[i.id,i.name,igOf(i),i.platform,i.agency,i.phone,i.lastNote].join(" ").toLowerCase().includes(q)))
+  const rows=infs.filter(i=>(!fsv||i.status===fsv)&&passes(i)&&(!q||[i.id,i.name,igOf(i),i.platform,i.agency,i.phone,i.lastNote].join(" ").toLowerCase().includes(q)))
     .sort((a,b)=>(b.lastAt||b.createdAt||0)-(a.lastAt||a.createdAt||0));
+  buildFilters();
+  updTog();$("count").innerHTML=(Object.values(flt).some(Boolean)||fsv||q)?"Showing "+rows.length+" of "+infs.length+" influencers <button class=\"g\" id=\"cclr\">Clear all</button>":infs.length+" influencers";
   $("list").innerHTML=rows.length?rows.map(i=>{
     const due=i.followUp&&i.followUp<=today();
     return `<div class="item ${i.id===openId?"sel":""}" data-id="${esc(i.id)}"><div class="av">${esc(ini(i.name))}</div>
@@ -312,7 +409,12 @@ function askLogin(){return new Promise(res=>{
   $("go").onclick=go;$("lp").onkeydown=e=>{if(e.key==="Enter")go()};
 })}
 async function init(){
-  $("q").oninput=render;$("add").onclick=addInfluencer;$("exp").onclick=exportXlsx;$("bulk").onclick=bulkFollowers;
+  $("q").oninput=render;$("add").onclick=addInfluencer;$("exp").onclick=exportXlsx;$("bulk").onclick=bulkFollowers;$("sum").onclick=showSummary;
+  $("ftog").onclick=()=>{$("filters").hidden=!$("filters").hidden;updTog()};$("t-all").onclick=()=>setView("all");$("t-fu").onclick=()=>setView("fu");$("fu-who").onchange=e=>{fuWho=e.target.value;render()};
+  $("count").onclick=e=>{if(e.target.id==="cclr"){Object.keys(flt).forEach(k=>flt[k]="");fsv="";$("q").value="";fsig="";render()}};
+  const FM={"f-email":"email","f-phone":"phone","f-ig":"ig","f-fol":"fol","f-agency":"agency","f-platform":"platform"};
+  $("filters").onchange=e=>{const k=FM[e.target.id];if(k){flt[k]=e.target.value;render()}};
+  $("filters").onclick=e=>{if(e.target.id==="f-clear"){Object.keys(flt).forEach(k=>flt[k]="");fsig="";render()}};
   $("chips").onclick=e=>{const c=e.target.closest(".chip");if(c){fsv=c.dataset.s;render()}};
   $("list").onclick=e=>{const c=e.target.closest(".item");if(c)openPanel(c.dataset.id)};
   if(API.startsWith("PASTE")){$("list").innerHTML='<div class="empty">The page is live, but the Google Sheet is not connected yet.</div>';$("add").disabled=true;return}
