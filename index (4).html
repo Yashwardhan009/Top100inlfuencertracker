@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Influencer Conversation Tracker</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f3f5f7;--surface:#fff;--ink:#0e1a26;--mute:#5b6b7a;--line:#dde3e9;--accent:#0b6b5f;--accent-ink:#fff;--soft:#e2f1ee;--warn:#b45309;--sel:#eef6f4}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1319;--surface:#151d25;--ink:#e8eef3;--mute:#93a3b2;--line:#25313c;--accent:#4fd1bf;--accent-ink:#06211d;--soft:#12302d;--warn:#fbbf24;--sel:#14282a}}
+:root[data-theme="dark"]{--bg:#0d1319;--surface:#151d25;--ink:#e8eef3;--mute:#93a3b2;--line:#25313c;--accent:#4fd1bf;--accent-ink:#06211d;--soft:#12302d;--warn:#fbbf24;--sel:#14282a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*:before,*:after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+h1{font-size:26px;font-weight:700;letter-spacing:-.02em;margin:0}
+.sub{color:var(--mute);margin:2px 0 0}
+input,select,textarea,button{font:inherit;color:inherit}
+input,select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 11px;width:100%}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:500}
+button.p{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.g{border-color:transparent;background:none;color:var(--mute)}
+button:disabled{opacity:.5;cursor:default}
+.tools{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.tools input{max-width:300px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:5px 12px;font-size:13px;background:none}
+.chip b{font-weight:600;color:var(--mute)}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}.chip.on b{color:inherit;opacity:.7}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:20px;align-items:start}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.item{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer;align-items:start}
+.item:last-child{border-bottom:0}.item:hover{background:var(--sel)}.item.sel{background:var(--sel);box-shadow:inset 3px 0 0 var(--accent)}
+.av{width:40px;height:40px;border-radius:50%;background:var(--soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:14px}
+.name{font-weight:600}.meta{color:var(--mute);font-size:13px}
+.snip{color:var(--mute);margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.right{text-align:right;font-size:13px;color:var(--mute);white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;color:var(--ink);margin-bottom:4px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.due{color:var(--warn);font-weight:600}
+.empty{color:var(--mute);text-align:center;padding:56px 20px}
+.panel{position:sticky;top:16px}
+.side{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;max-height:calc(100vh - 32px);overflow-y:auto}
+.head{display:flex;gap:12px;align-items:center;margin:8px 0 16px}.head .av{width:48px;height:48px;font-size:16px}
+.head h2{margin:0;font-size:20px;letter-spacing:-.01em}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin:-4px 0 18px}.facts:empty{display:none}.facts>div{overflow-wrap:anywhere}.chk{display:flex;gap:8px;align-items:center;margin:0;font-size:14px;color:var(--ink);cursor:pointer}.chk input{width:auto}.filters[hidden],.fuctl[hidden]{display:none}#ftog.on{border-color:var(--accent);color:var(--accent)}.tabs{display:flex;gap:4px;margin-bottom:12px;border-bottom:1px solid var(--line)}.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;padding:8px 14px;color:var(--mute);font-weight:600}.tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}.bdg{background:var(--accent);color:var(--accent-ink);border-radius:99px;padding:0 7px;font-size:12px;margin-left:4px}.fuctl{display:flex;gap:8px;align-items:center;margin-bottom:12px}.fuctl select{width:auto}.gh{padding:9px 16px;font-weight:700;font-size:13px;background:var(--bg);color:var(--mute);border-bottom:1px solid var(--line)}.gh.due{color:var(--warn)}body.fu .chips,body.fu #ftog,body.fu #filters{display:none!important}.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.filters select{width:auto;max-width:210px;padding:7px 10px;font-size:14px}.srow{display:flex;justify-content:space-between;align-items:center;width:100%;padding:9px 2px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:none;text-align:left}.sbtn{cursor:pointer}.sbtn:hover{color:var(--accent)}.brow{display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.brow a{color:var(--accent);text-decoration:none}.facts a{color:var(--accent);font-weight:500;text-decoration:none}.facts a:hover{text-decoration:underline}
+.form{display:grid;gap:10px;background:var(--bg);border-radius:12px;padding:14px;margin-bottom:22px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{font-size:13px;font-weight:500;color:var(--mute);display:block;margin-bottom:3px}
+h3{font-size:15px;margin:0 0 12px}
+.bad{border-color:#dc2626!important}
+.login{position:fixed;inset:0;z-index:10;background:var(--bg);display:grid;place-items:center;padding:20px}.login[hidden]{display:none}.login .box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:24px;width:min(380px,100%)}.login h2{margin:0 0 4px}
+.dp{position:relative}.dpt{display:block;border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:var(--surface);min-height:42px}.dp input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}.dp:has(input.bad) .dpt{border-color:#dc2626}.dp:focus-within .dpt{outline:2px solid var(--accent);outline-offset:1px}
+.tl{position:relative;margin-left:5px;padding-left:18px;border-left:2px solid var(--line)}
+.log{position:relative;padding-bottom:18px}
+.log:before{content:"";position:absolute;left:-25px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--accent);border:2px solid var(--surface)}
+.log .note{margin:3px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.next{font-size:13px;background:var(--soft);border-radius:6px;padding:3px 8px;display:inline-block}
+.err{background:var(--surface);border:1px solid var(--warn);border-radius:10px;padding:12px;margin-bottom:14px}
+.ph{color:var(--mute);text-align:center;padding:60px 20px}
+@media (max-width:900px){
+.layout{grid-template-columns:1fr}
+.panel{display:none;position:fixed;inset:0;top:0;z-index:5;background:var(--bg)}
+.panel.open{display:block}
+.side{border:0;border-radius:0;max-height:none;height:100%;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px))}
+.item{grid-template-columns:40px minmax(0,1fr)}.right{grid-column:2;text-align:left;display:flex;gap:10px;align-items:center}.pill{margin:0}
+}
+</style>
+</head>
+<body>
+<div class="login" id="login" hidden><div class="box"><h2>Team sign in</h2><p class="meta">Use the email and password your admin gave you.</p>
+<div style="display:grid;gap:10px"><input id="le" type="email" placeholder="Email" autocomplete="username"><input id="lp" type="password" placeholder="Password" autocomplete="current-password"><div class="meta" id="lerr" style="color:var(--warn)"></div><button class="p" id="go">Sign in</button></div></div></div>
+<div class="wrap">
+  <div class="top">
+    <div><h1>Influencer conversations</h1><p class="sub">The latest on every influencer, in one place for the whole team.</p></div>
+    <div><button class="g" id="out" hidden>Sign out</button> <button id="sum">Summary</button> <button id="bulk">Update followers</button> <button id="exp">Export to Excel</button> <button class="p" id="add">Add influencer</button></div>
+  </div>
+  <div id="err" class="err" hidden></div>
+  <div class="tabs"><button id="t-all">All influencers</button><button id="t-fu">Follow-ups</button></div>
+  <div class="fuctl" id="fuctl" hidden><label style="margin:0">Follow-ups for</label><select id="fu-who"></select></div>
+  <div class="tools"><input id="q" type="search" placeholder="Search name, Instagram or notes"><button id="ftog">Filters</button><div class="chips" id="chips"></div></div>
+  <div class="filters" id="filters" hidden></div>
+  <div class="meta" id="count" style="margin:0 0 10px"></div>
+  <div class="layout">
+    <div class="list" id="list"><div class="empty">Loading…</div></div>
+    <aside class="panel" id="panel"><div class="side" id="side"><div class="ph">Select an influencer to see their history and log a new conversation.</div></div></aside>
+  </div>
+</div>
+<div class="meta" style="text-align:center;padding:0 0 24px">Version 10</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const STATUSES=["Prospect","In conversation","Follow-up","Negotiating","Confirmed","Live / delivered","On hold","Declined"];
+const COLORS=["#94a3b8","#3b82f6","#ec4899","#f59e0b","#10b981","#8b5cf6","#64748b","#ef4444"];
+const CHANNELS=["Instagram DM","Email","WhatsApp","Phone / call","Video meeting","In person","Other"];
+const PH='<div class="ph">Select an influencer to see their history and log a new conversation.</div>';
+let db=null,user=null,myId=null,infs=[],logs=[],openId=null,names={},fsv="",editing=false;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmtT=t=>t?new Date(t).toLocaleString(undefined,{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}):"";
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+function fmtD(v){
+  if(!v)return "";
+  let y,m,d;
+  if(typeof v==="number"){const t=new Date(v);y=t.getFullYear();m=t.getMonth()+1;d=t.getDate()}
+  else{[y,m,d]=String(v).split("-").map(Number);if(!y||!m||!d)return String(v)}
+  const sf=d%100>=11&&d%100<=13?"th":["th","st","nd","rd"][d%10<4?d%10:0];
+  return d+sf+" "+MONTHS[m-1]+" "+y;
+}
+function igUrl(v){
+  v=String(v||"").trim();if(!v)return "";
+  if(/^https?:\/\//i.test(v)){try{const u=new URL(v);return /(^|\.)instagram\.com$/i.test(u.hostname)?u.href:""}catch(x){return ""}}
+  const h=v.replace(/^@/,"").replace(/^(www\.)?instagram\.com\//i,"").replace(/\/+$/,"");
+  return /^[\w.]{1,30}$/.test(h)?"https://www.instagram.com/"+h+"/":"";
+}
+function igName(u){try{const p=new URL(u).pathname.split("/").filter(Boolean);return p[0]&&!["p","reel","reels","stories"].includes(p[0])?"@"+p[0]:"Instagram"}catch(x){return "Instagram"}}
+//'const igv=$("ig").value.trim(),ig=igUrl(igv);if(igv&&!ig){alert("Please enter a valid Instagram link or @handle.");$("ig").focus();return}\n    '
+const igOf=i=>i.instagram||igUrl(i.handle);
+function parseFol(v){
+  v=String(v||"").trim().toLowerCase().replace(/[,\s]/g,"");
+  if(!v)return "";
+  const m=/^(\d+(?:\.\d+)?)([km]?)$/.exec(v);
+  if(!m)return null;
+  return String(Math.round(Number(m[1])*(m[2]==="k"?1e3:m[2]==="m"?1e6:1)));
+}
+function fmtFol(v){const n=Number(v);return n>=1e6?(+(n/1e6).toFixed(1))+"M":n>=1e3?(+(n/1e3).toFixed(1))+"K":String(n)}
+const igLink=i=>{const u=igOf(i);return /^https?:\/\//i.test(u||"")?`<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(igName(u))} ↗</a>`:"No Instagram link"};
+function bulkFollowers(){
+  openId=null;$("panel").classList.add("open");
+  const rows=[...infs].sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  $("side").innerHTML=`<button class="g" id="close">← All influencers</button><h2 style="margin:12px 0 4px">Update followers</h2>
+    <p class="meta" style="margin:0 0 12px">Open their profile, check the count and type it in. Examples: 12500, 12.5K, 1.2M. Leave blank to skip.</p>
+    <div>${rows.map(i=>`<div class="brow"><div><div class="name">${esc(i.name)}</div><div class="meta">${igLink(i)}${i.followersAt?" · updated "+esc(fmtD(i.followersAt)):""}</div></div><input data-id="${esc(i.id)}" data-old="${esc(i.followers||"")}" value="${esc(i.followers||"")}" inputmode="decimal" placeholder="Followers"></div>`).join("")}</div>
+    <button class="p" id="bsave" style="margin-top:14px">Save followers</button>`;
+  $("close").onclick=closePanel;
+  $("bsave").onclick=async()=>{
+    const items=[];let bad=null;
+    document.querySelectorAll("#side .brow input").forEach(inp=>{
+      const raw=inp.value.trim(),old=inp.dataset.old;
+      if(raw===old)return;
+      const v=parseFol(raw);
+      if(v===null){bad=bad||inp;return}
+      if(v!==old)items.push({id:inp.dataset.id,followers:v});
+    });
+    if(bad){alert("One of the follower counts isn't a valid number. Use digits, or K / M like 12.5K.");bad.focus();return}
+    if(!items.length){closePanel();return}
+    $("bsave").disabled=true;
+    try{await write("followers","influencers",items);closePanel()}
+    catch(e){showErr("Couldn't save followers ("+(e.code||"error")+")");$("bsave").disabled=false}
+  };
+}
+const flt={email:"",phone:"",ig:"",fol:"",agency:"",platform:""};
+let fsig="";
+const has=v=>String(v||"").trim()!=="";
+const ak=v=>String(v||"").trim().toLowerCase();
+function passes(i){
+  const f=flt;
+  if(f.email&&(f.email==="yes")!==has(i.email))return false;
+  if(f.phone&&(f.phone==="yes")!==has(i.phone))return false;
+  if(f.ig&&(f.ig==="yes")!==!!igOf(i))return false;
+  if(f.agency){const a=ak(i.agency);if(f.agency==="__none"?a!=="":a!==f.agency)return false}
+  if(f.platform&&ak(i.platform)!==f.platform)return false;
+  if(f.fol){
+    const n=has(i.followers)?Number(i.followers):null;
+    if(f.fol==="none"){if(n!==null)return false}
+    else{
+      if(n===null)return false;
+      if(f.fol==="lt10k"&&!(n<1e4))return false;
+      if(f.fol==="10k-1l"&&!(n>=1e4&&n<1e5))return false;
+      if(f.fol==="gte1l"&&!(n>=1e5))return false;
+      if(f.fol==="gte10l"&&!(n>=1e6))return false;
+    }
+  }
+  return true;
+}
+const uniq=arr=>{const m=new Map();arr.forEach(v=>{const t=String(v||"").trim();if(t&&!m.has(t.toLowerCase()))m.set(t.toLowerCase(),t)});return [...m].sort((a,b)=>a[1].localeCompare(b[1]))};
+function buildFilters(){
+  const ag=uniq(infs.map(i=>i.agency)),pl=uniq(infs.map(i=>i.platform));
+  const sig=JSON.stringify([ag,pl]);
+  if(sig===fsig)return;fsig=sig;
+  const yn=(id,label,v)=>`<select id="${id}"><option value="">${label}: any</option><option value="yes" ${v==="yes"?"selected":""}>${label}: available</option><option value="no" ${v==="no"?"selected":""}>${label}: missing</option></select>`;
+  const opts=(list,v)=>list.map(([k,t])=>`<option value="${esc(k)}" ${v===k?"selected":""}>${esc(t)}</option>`).join("");
+  const FOL=[["","Followers: any"],["lt10k","Under 10K"],["10k-1l","10K to 1 lakh"],["gte1l","1 lakh and above"],["gte10l","10 lakh and above"],["none","No count yet"]];
+  $("filters").innerHTML=yn("f-email","Email",flt.email)+yn("f-phone","Phone",flt.phone)+yn("f-ig","Instagram",flt.ig)
+    +`<select id="f-fol">${FOL.map(([k,t])=>`<option value="${k}" ${flt.fol===k?"selected":""}>${t}</option>`).join("")}</select>`
+    +`<select id="f-agency"><option value="">Agency: any</option><option value="__none" ${flt.agency==="__none"?"selected":""}>No agency</option>${opts(ag,flt.agency)}</select>`
+    +`<select id="f-platform"><option value="">Platform: any</option>${opts(pl,flt.platform)}</select>`
+    +`<button class="g" id="f-clear">Clear filters</button>`;
+}
+function curRows(){
+  const q=$("q").value.toLowerCase();
+  return infs.filter(i=>(!fsv||i.status===fsv)&&passes(i)&&(!q||[i.id,i.name,igOf(i),i.platform,i.agency,i.phone,i.lastNote].join(" ").toLowerCase().includes(q)));
+}
+function showSummary(){
+  openId=null;$("panel").classList.add("open");
+  const r=curRows(),n=r.length,cnt=f=>r.filter(f).length;
+  const by=new Map();
+  r.forEach(i=>{const t=String(i.agency||"").trim(),k=t?t.toLowerCase():"__none",e=by.get(k)||{k,t:t||"No agency",c:0};e.c++;by.set(k,e)});
+  const ag=[...by.values()].sort((a,b)=>b.c-a.c);
+  const stat=(l,v)=>`<div class="srow"><span>${l}</span><b>${v}</b></div>`;
+  const on=Object.values(flt).some(Boolean)||fsv||$("q").value;
+  $("side").innerHTML=`<button class="g" id="close">← All influencers</button><h2 style="margin:12px 0 4px">Summary</h2>
+    <p class="meta" style="margin:0 0 12px">${on?"Based on your current filters and search.":"All influencers."}</p>
+    ${stat("Influencers",n)}${stat("Email available",cnt(i=>has(i.email)))}${stat("Phone available",cnt(i=>has(i.phone)))}${stat("Instagram link added",cnt(i=>igOf(i)))}${stat("1 lakh+ followers",cnt(i=>has(i.followers)&&Number(i.followers)>=1e5))}${stat("No follower count yet",cnt(i=>!has(i.followers)))}
+    <h3 style="margin:18px 0 6px">By agency (tap to filter)</h3>
+    ${ag.map(a=>`<button class="srow sbtn" data-k="${esc(a.k)}"><span>${esc(a.t)}</span><b>${a.c}</b></button>`).join("")||'<div class="meta">Nothing to show.</div>'}`;
+  $("close").onclick=closePanel;
+  $("side").querySelectorAll(".sbtn").forEach(b=>b.onclick=()=>{flt.agency=b.dataset.k;fsig="";render();showSummary()});
+}
+let view="all",fuWho="me",fwsig="";
+function addDays(iso,n){const [y,m,d]=iso.split("-").map(Number),t=new Date(y,m-1,d+n);return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0")}
+function updTog(){const n=Object.values(flt).filter(Boolean).length;$("ftog").textContent="Filters"+(n?" ("+n+")":"");$("ftog").classList.toggle("on",!$("filters").hidden||n>0)}
+function updTabs(){
+  const t=today(),n=infs.filter(i=>has(i.followUp)&&i.followUp<=t&&i.lastBy&&i.lastBy===myId).length;
+  $("t-fu").innerHTML="Follow-ups"+(n?` <span class="bdg">${n}</span>`:"");
+  $("t-all").classList.toggle("on",view==="all");$("t-fu").classList.toggle("on",view==="fu");
+  $("fuctl").hidden=view!=="fu";
+}
+function setView(v){view=v;document.body.classList.toggle("fu",v==="fu");render()}
+function buildFuWho(){
+  const ppl=[...new Set(infs.filter(i=>has(i.followUp)&&i.lastBy&&i.lastBy!==myId).map(i=>i.lastBy))].sort();
+  const sig=JSON.stringify(ppl)+fuWho;
+  if(sig===fwsig)return;fwsig=sig;
+  $("fu-who").innerHTML=`<option value="me" ${fuWho==="me"?"selected":""}>Me</option><option value="all" ${fuWho==="all"?"selected":""}>Everyone</option>`+ppl.map(e=>`<option value="${esc(e)}" ${fuWho===e?"selected":""}>${esc(who(e))}</option>`).join("");
+}
+const fuRow=i=>`<div class="item ${i.id===openId?"sel":""}" data-id="${esc(i.id)}"><div class="av">${esc(ini(i.name))}</div>
+  <div><div class="name">${esc(i.name)} <span class="meta">${esc([i.id,i.agency].filter(Boolean).join(" · "))}</span></div>
+  ${i.nextStep?`<div class="next" style="margin-top:3px">Next: ${esc(i.nextStep)}</div>`:""}
+  <div class="snip">${esc(i.lastNote||"")}</div></div>
+  <div class="right"><div class="pill">${dot(i.status)}${esc(i.status)}</div><div class="${i.followUp<=today()?"due":""}">${esc(fmtD(i.followUp))}</div><div>${esc(who(i.lastBy))}</div></div></div>`;
+function renderFu(){
+  const q=$("q").value.toLowerCase(),t=today(),w=addDays(t,7);
+  buildFuWho();
+  let rows=infs.filter(i=>has(i.followUp)&&(!q||[i.id,i.name,igOf(i),i.agency,i.nextStep,i.lastNote].join(" ").toLowerCase().includes(q)));
+  if(fuWho==="me")rows=rows.filter(i=>i.lastBy&&i.lastBy===myId);else if(fuWho!=="all")rows=rows.filter(i=>i.lastBy===fuWho);
+  rows.sort((a,b)=>a.followUp.localeCompare(b.followUp));
+  const G=[["Overdue",r=>r.followUp<t,"due"],["Today",r=>r.followUp===t,""],["Next 7 days",r=>r.followUp>t&&r.followUp<=w,""],["Later",r=>r.followUp>w,""]];
+  $("count").textContent=rows.length+" follow-up"+(rows.length===1?"":"s");
+  $("list").innerHTML=rows.length?G.map(([l,f,c])=>{const g=rows.filter(f);return g.length?`<div class="gh ${c}">${l} (${g.length})</div>`+g.map(fuRow).join(""):""}).join(""):`<div class="empty">No follow-ups ${fuWho==="me"?"assigned to you. Choose Everyone to see the whole team.":"found."}</div>`;
+}
+function syncNoFu(){
+  const c=$("nofu");if(!c)return;
+  const on=c.checked;
+  $("fu").disabled=on;
+  if(on){$("fu").value="";syncFu()}
+  $("lnext").textContent=on?"Next step (optional)":"Next step (required)";
+  $("lfu").textContent=on?"Follow up by (not needed)":"Follow up by (required)";
+  const d=document.querySelector(".dp");if(d)d.style.opacity=on?".5":"1";
+}
+function syncFu(){const f=$("fu"),t=$("fud");if(f&&t)t.textContent=fmtD(f.value)||"Pick a date"}
+const who=id=>id?(id===myId?"You":String(id).split("@")[0]):"a teammate";
+const ini=n=>n.split(/\s+/).slice(0,2).map(w=>w[0]||"").join("").toUpperCase()||"?";
+const dot=s=>`<span class="dot" style="background:${COLORS[Math.max(0,STATUSES.indexOf(s))]}"></span>`;
+function rel(t){if(!t)return"No contact yet";const d=Math.floor((Date.now()-t)/864e5);return d<=0?"Today":d===1?"Yesterday":d<30?d+" days ago":new Date(t).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})}
+function showErr(m){const e=$("err");e.textContent=m;e.hidden=false}
+async function resolveNames(){
+  if(!user||!user.profiles)return;
+  const ids=[...new Set([...infs.map(i=>i.lastBy),...logs.map(l=>l.by)].filter(Boolean))];
+  if(!ids.length)return;
+  try{const ps=await user.profiles(ids);ids.forEach(i=>{names[i]=(ps[i]&&ps[i].name)||""});}catch(e){}
+}
+function render(){
+  updTabs();
+  if(view==="fu"){renderFu();if(openId)renderPanel();return}
+  const q=$("q").value.toLowerCase();
+  $("chips").innerHTML=[["",`All`,infs.length]].concat(STATUSES.map(s=>[s,s,infs.filter(i=>i.status===s).length])).filter(c=>c[0]===""||c[2]||c[0]===fsv)
+    .map(c=>`<button class="chip ${fsv===c[0]?"on":""}" data-s="${esc(c[0])}">${c[0]?dot(c[0]):""}${esc(c[1])} <b>${c[2]}</b></button>`).join("");
+  const rows=infs.filter(i=>(!fsv||i.status===fsv)&&passes(i)&&(!q||[i.id,i.name,igOf(i),i.platform,i.agency,i.phone,i.lastNote].join(" ").toLowerCase().includes(q)))
+    .sort((a,b)=>(b.lastAt||b.createdAt||0)-(a.lastAt||a.createdAt||0));
+  buildFilters();
+  updTog();$("count").innerHTML=(Object.values(flt).some(Boolean)||fsv||q)?"Showing "+rows.length+" of "+infs.length+" influencers <button class=\"g\" id=\"cclr\">Clear all</button>":infs.length+" influencers";
+  $("list").innerHTML=rows.length?rows.map(i=>{
+    const due=i.followUp&&i.followUp<=today();
+    return `<div class="item ${i.id===openId?"sel":""}" data-id="${esc(i.id)}"><div class="av">${esc(ini(i.name))}</div>
+      <div><div class="name">${esc(i.name)} <span class="meta">${esc([i.id,igOf(i)?igName(igOf(i)):"",i.followers?fmtFol(i.followers)+" followers":"",i.platform,i.agency].filter(Boolean).join(" · "))}</span></div>
+      <div class="snip">${i.lastNote?esc(i.lastNote):"No conversations logged yet."}</div></div>
+      <div class="right"><div class="pill">${dot(i.status)}${esc(i.status)}</div><div>${rel(i.lastAt)}${i.lastBy?" · "+esc(who(i.lastBy)):""}</div>${i.followUp?`<div class="${due?"due":""}">Follow up ${esc(fmtD(i.followUp))}</div>`:""}</div></div>`}).join(""):`<div class="empty">${infs.length?"No influencers match your search.":"No influencers yet. Add the first one to start logging conversations."}</div>`;
+  if(openId)renderPanel();
+}
+function renderPanel(){
+  if(editing)return;
+  const i=infs.find(x=>x.id===openId);
+  if(!i){closePanel();return}
+  $("panel").classList.add("open");
+  const my=logs.filter(l=>l.inf===openId).sort((a,b)=>b.at-a.at);
+  const keep=$("note")?$("note").value:"",keepN=$("next")?$("next").value:"",keepF=$("fu")?$("fu").value:"",keepC=$("nofu")?$("nofu").checked:false;
+  $("side").innerHTML=`
+    <div class="two" style="grid-template-columns:auto auto;justify-content:space-between"><button class="g" id="close">← All influencers</button><span><button class="g" id="edit">Edit details</button><button class="g" id="del">Delete</button></span></div>
+    <div class="head"><div class="av">${esc(ini(i.name))}</div><div><h2>${esc(i.name)}</h2><div class="meta">${esc([i.id,i.platform].filter(Boolean).join(" · "))}</div></div></div>
+    <div class="facts">${[["Agency",i.agency],["Cost",i.cost],["Phone",i.phone],["Email",i.email],["Instagram",igOf(i),/^https?:\/\//i.test(igOf(i)||"")?`<a href="${esc(igOf(i))}" target="_blank" rel="noopener noreferrer">${esc(igName(igOf(i)))} ↗</a>`:""],["Followers",i.followers?Number(i.followers).toLocaleString("en-IN")+(i.followersAt?" (as of "+fmtD(i.followersAt)+")":""):""]].filter(f=>f[1]).map(f=>`<div><div class="meta">${f[0]}</div><div>${f[2]||esc(f[1])}</div></div>`).join("")}</div>
+    <div class="form">
+      <div class="two"><div><label>Channel</label><select id="ch">${CHANNELS.map(c=>`<option>${c}</option>`).join("")}</select></div>
+      <div><label>Status</label><select id="st">${STATUSES.map(s=>`<option ${s===i.status?"selected":""}>${s}</option>`).join("")}</select></div></div>
+      <div><label>What was discussed</label><textarea id="note" rows="4" placeholder="Summary, rates quoted, concerns, agreements"></textarea></div>
+      <div class="two"><div><label id="lnext">Next step (required)</label><input id="next" placeholder="Send contract"></div><div><label id="lfu">Follow up by (required)</label><div class="dp"><span class="dpt" id="fud">Pick a date</span><input id="fu" type="date" min="${today()}"></div></div></div>
+      <label class="chk"><input type="checkbox" id="nofu"> No follow-up needed</label>
+      <div class="meta" id="hint" style="color:var(--warn)"></div>
+      <button class="p" id="save">Log conversation</button>
+    </div>
+    <h3>History (${my.length})</h3>
+    ${my.length?`<div class="tl">${my.map(l=>`<div class="log"><div class="meta"><b style="color:var(--ink)">${esc(l.channel)}</b> · ${fmtT(l.at)} · ${esc(who(l.by))}</div><div class="note">${esc(l.note)}</div>${l.nextStep?`<span class="next">Next: ${esc(l.nextStep)}${l.followUp?" by "+esc(fmtD(l.followUp)):""}</span>`:""}${l.followUp?"":` <span class="next">No follow-up needed</span>`}</div>`).join("")}</div>`:'<div class="meta">Nothing logged yet. Your first entry will appear here.</div>'}`;
+  if(keep)$("note").value=keep;if(keepN)$("next").value=keepN;if(keepF)$("fu").value=keepF;$("fu").onclick=()=>{try{$("fu").showPicker()}catch(x){}};$("fu").onchange=syncFu;syncFu();$("nofu").checked=keepC;$("nofu").onchange=syncNoFu;syncNoFu();
+  $("close").onclick=closePanel;$("del").onclick=delInf;$("edit").onclick=editInf;$("save").onclick=saveLog;
+}
+function openPanel(id){editing=false;openId=id;render()}
+function closePanel(){editing=false;openId=null;$("panel").classList.remove("open");$("side").innerHTML=PH;render()}
+async function saveLog(){
+  const note=$("note").value.trim();
+  const nof=$("nofu").checked,miss=[["note",note]].concat(nof?[]:[["next",$("next").value.trim()],["fu",$("fu").value]]).filter(x=>!x[1]);
+  ["note","next","fu"].forEach(k=>$(k).classList.toggle("bad",miss.some(m=>m[0]===k)));
+  if(miss.length){$("hint").textContent=nof?"Add what was discussed to log this conversation.":"Add what was discussed, a next step and a follow-up date, or tick No follow-up needed.";$(miss[0][0]).focus();return}
+  const i=infs.find(x=>x.id===openId);
+  const now=Date.now(),next=$("next").value.trim(),fu=$("fu").value,st=$("st").value;
+  $("save").disabled=true;
+  try{
+    await db.collection("logs").add({inf:i.id,at:now,channel:$("ch").value,note,nextStep:next,followUp:fu,by:myId||""});
+    const {id,...rest}=i;
+    await db.doc("influencers/"+id).set({...rest,status:st,lastAt:now,lastNote:note,lastBy:myId||"",nextStep:next,followUp:fu});
+    $("note").value="";$("next").value="";$("fu").value="";$("nofu").checked=false;syncNoFu();
+  }catch(e){showErr("Couldn't save the conversation ("+(e.code||"error")+"). You may have view-only access; ask the owner for Contributor access.")}
+  const b=$("save");if(b)b.disabled=false;
+}
+function editInf(){
+  const i=infs.find(x=>x.id===openId);if(!i)return;
+  editing=true;
+  $("side").innerHTML=`<button class="g" id="cancel">← Cancel</button>
+    <h2 style="margin:12px 0 14px">Edit details</h2>
+    <div class="form">
+      <div><label>Name</label><input id="n" value="${esc(i.name)}"></div>
+      <div><label>Platform</label><input id="pl" value="${esc(i.platform)}"></div>
+      <div class="two"><div><label>Email</label><input id="em" value="${esc(i.email)}"></div><div><label>Phone number</label><input id="ph" value="${esc(i.phone)}"></div></div><div class="two"><div><label>Agency</label><input id="ag" value="${esc(i.agency)}"></div><div><label>Cost or fee</label><input id="co" value="${esc(i.cost)}" placeholder="e.g. ₹50,000"></div></div><div><label>Instagram link or @handle</label><input id="ig" value="${esc(igOf(i))}" placeholder="https://instagram.com/name"></div><div><label>Followers (optional)</label><input id="fo" inputmode="decimal" value="${esc(i.followers||"")}" placeholder="e.g. 12500 or 12.5K"></div>
+      <div><label>Status</label><select id="st">${STATUSES.map(s=>`<option ${s===i.status?"selected":""}>${s}</option>`).join("")}</select></div>
+      <button class="p" id="upd">Save changes</button>
+    </div>`;
+  $("cancel").onclick=()=>{editing=false;renderPanel()};
+  $("upd").onclick=async()=>{
+    const name=$("n").value.trim();if(!name){$("n").focus();return}
+    const igv=$("ig").value.trim(),ig=igUrl(igv);if(igv&&!ig){alert("Please enter a valid Instagram link or @handle.");$("ig").focus();return}
+    const fol=parseFol($("fo").value);if(fol===null){alert("Followers must be a number, like 12500 or 12.5K.");$("fo").focus();return}
+    $("upd").disabled=true;
+    const {id,...rest}=i;
+    try{await db.doc("influencers/"+id).set({...rest,name,platform:$("pl").value.trim(),email:$("em").value.trim(),phone:$("ph").value.trim(),agency:$("ag").value.trim(),cost:$("co").value.trim(),instagram:ig,followers:fol,followersAt:fol===String(i.followers||"")?(i.followersAt||0):(fol?Date.now():0),status:$("st").value});editing=false;render()}
+    catch(e){showErr("Couldn't save changes ("+(e.code||"error")+")");$("upd").disabled=false}
+  };
+}
+async function delInf(){
+  if(!confirm("Delete this influencer and their history?"))return;
+  const id=openId;
+  try{for(const l of logs.filter(l=>l.inf===id))await db.doc("logs/"+l.id).delete();await db.doc("influencers/"+id).delete();closePanel()}
+  catch(e){showErr("Couldn't delete ("+(e.code||"error")+")")}
+}
+function addInfluencer(){
+  openId=null;$("panel").classList.add("open");
+  $("side").innerHTML=`<button class="g" id="close">← All influencers</button>
+    <h2 style="margin:12px 0 14px">New influencer</h2>
+    <div class="form">
+      <div><label>Name</label><input id="n"></div>
+      <div><label>Platform</label><input id="pl" placeholder="Instagram, YouTube"></div>
+      <div class="two"><div><label>Email</label><input id="em"></div><div><label>Phone number</label><input id="ph"></div></div><div class="two"><div><label>Agency</label><input id="ag"></div><div><label>Cost or fee</label><input id="co" placeholder="e.g. ₹50,000"></div></div><div><label>Instagram link or @handle</label><input id="ig" placeholder="https://instagram.com/name"></div><div><label>Followers (optional)</label><input id="fo" inputmode="decimal" placeholder="e.g. 12500 or 12.5K"></div>
+      <div><label>Status</label><select id="st">${STATUSES.map(s=>`<option>${s}</option>`).join("")}</select></div>
+      <button class="p" id="create">Add influencer</button>
+    </div>`;
+  $("close").onclick=closePanel;$("n").focus();
+  $("create").onclick=async()=>{
+    const name=$("n").value.trim();if(!name){$("n").focus();return}
+    const igv=$("ig").value.trim(),ig=igUrl(igv);if(igv&&!ig){alert("Please enter a valid Instagram link or @handle.");$("ig").focus();return}
+    const fol=parseFol($("fo").value);if(fol===null){alert("Followers must be a number, like 12500 or 12.5K.");$("fo").focus();return}
+    $("create").disabled=true;
+    try{const ref=await db.collection("influencers").add({name,platform:$("pl").value.trim(),email:$("em").value.trim(),phone:$("ph").value.trim(),agency:$("ag").value.trim(),cost:$("co").value.trim(),instagram:ig,followers:fol,followersAt:fol?Date.now():0,status:$("st").value,createdAt:Date.now(),lastAt:0,lastNote:"",lastBy:"",nextStep:"",followUp:""});openPanel(ref.id)}
+    catch(e){showErr("Couldn't add the influencer ("+(e.code||"error")+")");closePanel()}
+  };
+}
+const loaders=[];
+const API="https://script.google.com/macros/s/AKfycbwgvLWt-wa7k9hMSJzJ-OVgKocGNZ_QQVgEOP_EL7nH-1gy2dfmKX6DqKFkBgo7ji9o/exec";
+let AUTH=null;
+async function gs(fn,...a){
+  const body={fn,email:AUTH.email,password:AUTH.password,n:a[0],id:fn==="put"||fn==="del"?a[1]:undefined,d:fn==="add"?a[1]:fn==="put"?a[2]:fn==="followers"?a[1]:undefined};
+  let r,j;
+  try{r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)})}catch(x){throw {code:"network"}}
+  try{j=await r.json()}catch(x){throw {code:"not-json"}}
+  if(j.error)throw {code:j.error};
+  return j.data!==undefined?j.data:j;
+}
+const write=(fn,...a)=>gs(fn,...a).then(r=>{loaders.forEach(f=>f());return r});
+function shim(){
+  const col=n=>({
+    async add(d){return {id:await write("add",n,d)}},orderBy(){return this},limit(){return this},
+    onSnapshot(cb,err){
+      let last=null;const load=async()=>{try{const rows=await gs("getAll",n);const js=JSON.stringify(rows);if(js===last)return;last=js;cb({docs:rows.map(r=>{const {id,...x}=r;return {id,data:()=>x}})})}catch(e){err&&err(e)}};
+      loaders.push(load);load();setInterval(load,10000);window.addEventListener("focus",load);
+    }});
+  return {collection:col,doc:p=>{const [n,id]=p.split("/");return {set:d=>write("put",n,id,d),delete:()=>write("del",n,id)}}};
+}
+function exportXlsx(){
+  if(!window.XLSX){showErr("The Excel export tool didn't load. Check your internet connection and try again.");return}
+  if(!infs.length){showErr("There is nothing to export yet.");return}
+  const nm=Object.fromEntries(infs.map(i=>[i.id,i.name]));
+  const people=[...infs].sort((a,b)=>(b.lastAt||0)-(a.lastAt||0)).map(i=>({"ID":i.id,"Name":i.name,"Instagram":igOf(i),"Followers":i.followers?Number(i.followers):"","Followers updated":fmtD(i.followersAt),"Platform":i.platform,"Agency":i.agency,"Email":i.email,"Phone":i.phone,"Cost":i.cost,"Status":i.status,"Last contact":fmtD(i.lastAt),"Last contacted by":i.lastBy?who(i.lastBy):"","Last note":i.lastNote,"Next step":i.nextStep,"Follow up by":fmtD(i.followUp),"Added on":fmtD(i.createdAt)}));
+  const convos=[...logs].sort((a,b)=>b.at-a.at).map(l=>({"Influencer ID":l.inf,"Influencer":nm[l.inf]||"(deleted)","Date":fmtD(l.at),"Time":new Date(l.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),"Channel":l.channel,"Notes":l.note,"Next step":l.nextStep,"Follow up by":fmtD(l.followUp),"Logged by":l.by?who(l.by):""}));
+  const sheet=rows=>{const ws=XLSX.utils.json_to_sheet(rows);ws["!cols"]=Object.keys(rows[0]||{}).map(k=>({wch:Math.min(50,rows.reduce((m,r)=>Math.max(m,String(r[k]??"").length),k.length)+2)}));return ws};
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,sheet(people),"Influencers");
+  XLSX.utils.book_append_sheet(wb,sheet(convos),"Conversations");
+  XLSX.writeFile(wb,"influencer-tracker-"+today()+".xlsx");
+}
+let LASTERR="";
+const loginMsg=()=>LASTERR==="auth"?"Wrong email or password.":LASTERR==="network"?"Can't reach the Google Sheet. Check your internet or try another browser.":LASTERR==="not-json"?"Google blocked the request. In Apps Script set Who has access to Anyone, then deploy a new version.":"Sign in failed ("+LASTERR+").";
+window.addEventListener("error",e=>showErr("Something went wrong: "+e.message));
+window.addEventListener("unhandledrejection",e=>showErr("Something went wrong: "+((e.reason&&(e.reason.code||e.reason.message))||e.reason)));
+async function tryLogin(e,p){AUTH={email:e.trim().toLowerCase(),password:p};try{await gs("login");return true}catch(x){AUTH=null;LASTERR=x&&x.code;return false}}
+function askLogin(){return new Promise(res=>{
+  $("login").hidden=false;
+  const go=async()=>{$("lerr").textContent="";
+    if(await tryLogin($("le").value,$("lp").value)){try{localStorage.setItem("trk",JSON.stringify({e:AUTH.email,p:AUTH.password}))}catch(x){}$("login").hidden=true;res()}
+    else $("lerr").textContent=loginMsg()};
+  $("go").onclick=go;$("lp").onkeydown=e=>{if(e.key==="Enter")go()};
+})}
+async function init(){
+  $("q").oninput=render;$("add").onclick=addInfluencer;$("exp").onclick=exportXlsx;$("bulk").onclick=bulkFollowers;$("sum").onclick=showSummary;
+  $("ftog").onclick=()=>{$("filters").hidden=!$("filters").hidden;updTog()};$("t-all").onclick=()=>setView("all");$("t-fu").onclick=()=>setView("fu");$("fu-who").onchange=e=>{fuWho=e.target.value;render()};
+  $("count").onclick=e=>{if(e.target.id==="cclr"){Object.keys(flt).forEach(k=>flt[k]="");fsv="";$("q").value="";fsig="";render()}};
+  const FM={"f-email":"email","f-phone":"phone","f-ig":"ig","f-fol":"fol","f-agency":"agency","f-platform":"platform"};
+  $("filters").onchange=e=>{const k=FM[e.target.id];if(k){flt[k]=e.target.value;render()}};
+  $("filters").onclick=e=>{if(e.target.id==="f-clear"){Object.keys(flt).forEach(k=>flt[k]="");fsig="";render()}};
+  $("chips").onclick=e=>{const c=e.target.closest(".chip");if(c){fsv=c.dataset.s;render()}};
+  $("list").onclick=e=>{const c=e.target.closest(".item");if(c)openPanel(c.dataset.id)};
+  if(API.startsWith("PASTE")){$("list").innerHTML='<div class="empty">The page is live, but the Google Sheet is not connected yet.</div>';$("add").disabled=true;return}
+  try{
+    let ok=false;
+    try{const sv=JSON.parse(localStorage.getItem("trk")||"null");if(sv)ok=await tryLogin(sv.e,sv.p)}catch(x){}
+    if(!ok)await askLogin();
+    myId=AUTH.email;user={};db=shim();
+    $("out").hidden=false;$("out").onclick=()=>{try{localStorage.removeItem("trk")}catch(x){}location.reload()};
+  }catch(e){}
+  if(!db){$("list").innerHTML='<div class="empty">Could not connect to the Google Sheet. Make sure you have edit access to it.</div>';$("add").disabled=true;return}
+  db.collection("influencers").onSnapshot(async s=>{infs=s.docs.map(d=>({id:d.id,...d.data()}));await resolveNames();render()},e=>showErr("Couldn't load influencers ("+e.code+")"));
+  db.collection("logs").orderBy("at","desc").limit(1000).onSnapshot(async s=>{logs=s.docs.map(d=>({id:d.id,...d.data()}));await resolveNames();render()},e=>showErr("Couldn't load logs ("+e.code+")"));
+}
+init();
+</script>
+</body>
+</html>
