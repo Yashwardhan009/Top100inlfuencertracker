@@ -89,11 +89,11 @@ h3{font-size:15px;margin:0 0 12px}
     <aside class="panel" id="panel"><div class="side" id="side"><div class="ph">Select an influencer to see their history and log a new conversation.</div></div></aside>
   </div>
 </div>
-<div class="meta" style="text-align:center;padding:0 0 24px">Version 11</div>
+<div class="meta" style="text-align:center;padding:0 0 24px">Version 12</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const STATUSES=["Prospect","In conversation","Follow-up","Negotiating","Confirmed","Live / delivered","On hold","Declined"];
-const COLORS=["#94a3b8","#3b82f6","#ec4899","#f59e0b","#10b981","#8b5cf6","#64748b","#ef4444"];
+const STATUSES=["Prospect","First message dropped","In conversation","Follow-up","Negotiating","Confirmed","Live / delivered","On hold","Declined"];
+const COLORS=["#94a3b8","#06b6d4","#3b82f6","#ec4899","#f59e0b","#10b981","#8b5cf6","#64748b","#ef4444"];
 const CHANNELS=["Instagram DM","Email","WhatsApp","Phone / call","Video meeting","In person","Other"];
 const PH='<div class="ph">Select an influencer to see their history and log a new conversation.</div>';
 let db=null,user=null,myId=null,infs=[],logs=[],openId=null,names={},fsv="",editing=false;
