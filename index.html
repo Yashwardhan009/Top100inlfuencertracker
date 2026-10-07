@@ -89,8 +89,7 @@ h3{font-size:15px;margin:0 0 12px}
     <aside class="panel" id="panel"><div class="side" id="side"><div class="ph">Select an influencer to see their history and log a new conversation.</div></div></aside>
   </div>
 </div>
-<div class="meta" style="text-align:center;padding:0 0 24px">Version 12</div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<div class="meta" style="text-align:center;padding:0 0 24px">Version 13</div>
 <script>
 const STATUSES=["Prospect","First message dropped","In conversation","Follow-up","Negotiating","Confirmed","Live / delivered","On hold","Declined"];
 const COLORS=["#94a3b8","#06b6d4","#3b82f6","#ec4899","#f59e0b","#10b981","#8b5cf6","#64748b","#ef4444"];
@@ -318,9 +317,10 @@ async function saveLog(){
   const now=Date.now(),next=$("next").value.trim(),fu=$("fu").value,st=$("st").value;
   $("save").disabled=true;
   try{
-    await db.collection("logs").add({inf:i.id,at:now,channel:$("ch").value,note,nextStep:next,followUp:fu,by:myId||""});
+    const p1=db.collection("logs").add({inf:i.id,at:now,channel:$("ch").value,note,nextStep:next,followUp:fu,by:myId||""});
     const {id,...rest}=i;
-    await db.doc("influencers/"+id).set({...rest,status:st,lastAt:now,lastNote:note,lastBy:myId||"",nextStep:next,followUp:fu});
+    const p2=db.doc("influencers/"+id).set({...rest,status:st,lastAt:now,lastNote:note,lastBy:myId||"",nextStep:next,followUp:fu});
+    await Promise.all([p1,p2]);
     $("note").value="";$("next").value="";$("fu").value="";$("nofu").checked=false;syncNoFu();
   }catch(e){showErr("Couldn't save the conversation ("+(e.code||"error")+"). You may have view-only access; ask the owner for Contributor access.")}
   const b=$("save");if(b)b.disabled=false;
@@ -386,17 +386,53 @@ async function gs(fn,...a){
   if(j.error)throw {code:j.error};
   return j.data!==undefined?j.data:j;
 }
-const write=(fn,...a)=>gs(fn,...a).then(r=>{loaders.forEach(f=>f());return r});
-function shim(){
-  const col=n=>({
-    async add(d){return {id:await write("add",n,d)}},orderBy(){return this},limit(){return this},
-    onSnapshot(cb,err){
-      let last=null;const load=async()=>{try{const rows=await gs("getAll",n);const js=JSON.stringify(rows);if(js===last)return;last=js;cb({docs:rows.map(r=>{const {id,...x}=r;return {id,data:()=>x}})})}catch(e){err&&err(e)}};
-      loaders.push(load);load();setInterval(load,10000);window.addEventListener("focus",load);
-    }});
-  return {collection:col,doc:p=>{const [n,id]=p.split("/");return {set:d=>write("put",n,id,d),delete:()=>write("del",n,id)}}};
+let DB={influencers:[],logs:[]},REV=null,subs={},pulling=null,lastPull=0,pending=0,SIG={};
+const toDocs=r=>({docs:r.map(o=>{const {id,...x}=o;return {id,data:()=>x}})});
+function emit(n){(subs[n]||[]).forEach(f=>f.cb(toDocs(DB[n])))}
+function touch(n){SIG[n]="";emit(n)}
+const send=async(fn,...a)=>{pending++;try{return await gs(fn,...a)}finally{pending--}};
+function pull(force){
+  if(pulling)return pulling;
+  pulling=(async()=>{
+    try{
+      if(!force&&REV!==null&&Date.now()-lastPull<12e4){const r=await gs("rev");if(String(r)===REV)return}
+      const d=await gs("bootstrap");
+      if(pending>0)return;
+      REV=String(d.rev);lastPull=Date.now();
+      ["influencers","logs"].forEach(n=>{const js=JSON.stringify(d[n]);if(js!==SIG[n]){SIG[n]=js;DB[n]=d[n];emit(n)}});
+    }catch(e){
+      if(e&&e.code==="auth"){try{localStorage.removeItem("trk")}catch(x){}location.reload();return}
+      Object.values(subs).flat().forEach(f=>f.err&&f.err(e));
+    }finally{pulling=null}
+  })();
+  return pulling;
 }
-function exportXlsx(){
+async function opt(n,apply,call){apply();touch(n);try{return await call()}catch(e){pull(true);throw e}}
+async function write(fn,...a){
+  if(fn==="followers"){const items=a[1];return opt("influencers",()=>items.forEach(it=>{const r=DB.influencers.find(q=>q.id===it.id);if(r){r.followers=it.followers;r.followersAt=it.followers?Date.now():0}}),()=>send(fn,...a))}
+  return send(fn,...a);
+}
+function shim(){
+  if(!shim.t){shim.t=setInterval(()=>{if(document.visibilityState==="visible")pull(false)},15000);document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")pull(false)})}
+  const col=n=>({
+    async add(d){
+      if(n==="logs"){
+        const tmp="tmp"+Date.now()+Math.random().toString(36).slice(2,6);
+        DB.logs.push({...d,id:tmp});touch("logs");
+        try{const id=await send("add",n,d);const r=DB.logs.find(x=>x.id===tmp);if(r)r.id=id;return {id}}
+        catch(e){DB.logs=DB.logs.filter(x=>x.id!==tmp);touch("logs");throw e}
+      }
+      const id=await send("add",n,d);DB[n].push({...d,id});touch(n);return {id};
+    },
+    orderBy(){return this},limit(){return this},
+    onSnapshot(cb,err){(subs[n]=subs[n]||[]).push({cb,err});if(REV!==null)emit(n);pull(true)}
+  });
+  return {collection:col,doc:p=>{const [n,id]=p.split("/");return {
+    set:d=>opt(n,()=>{const k=DB[n].findIndex(r=>r.id===id);if(k>=0)DB[n][k]={...d,id}},()=>send("put",n,id,d)),
+    delete:()=>opt(n,()=>{DB[n]=DB[n].filter(r=>r.id!==id)},()=>send("del",n,id))}}};
+}
+async function exportXlsx(){
+  if(!window.XLSX){try{await new Promise((ok,no)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";sc.onload=ok;sc.onerror=no;document.head.appendChild(sc)})}catch(x){}}
   if(!window.XLSX){showErr("The Excel export tool didn't load. Check your internet connection and try again.");return}
   if(!infs.length){showErr("There is nothing to export yet.");return}
   const nm=Object.fromEntries(infs.map(i=>[i.id,i.name]));
@@ -432,7 +468,7 @@ async function init(){
   if(API.startsWith("PASTE")){$("list").innerHTML='<div class="empty">The page is live, but the Google Sheet is not connected yet.</div>';$("add").disabled=true;return}
   try{
     let ok=false;
-    try{const sv=JSON.parse(localStorage.getItem("trk")||"null");if(sv)ok=await tryLogin(sv.e,sv.p)}catch(x){}
+    try{const sv=JSON.parse(localStorage.getItem("trk")||"null");if(sv){AUTH={email:sv.e,password:sv.p};ok=true}}catch(x){}
     if(!ok)await askLogin();
     myId=AUTH.email;user={};db=shim();
     $("out").hidden=false;$("out").onclick=()=>{try{localStorage.removeItem("trk")}catch(x){}location.reload()};
