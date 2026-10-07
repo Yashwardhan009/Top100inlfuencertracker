@@ -89,7 +89,7 @@ h3{font-size:15px;margin:0 0 12px}
     <aside class="panel" id="panel"><div class="side" id="side"><div class="ph">Select an influencer to see their history and log a new conversation.</div></div></aside>
   </div>
 </div>
-<div class="meta" style="text-align:center;padding:0 0 24px">Version 10</div>
+<div class="meta" style="text-align:center;padding:0 0 24px">Version 11</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const STATUSES=["Prospect","In conversation","Follow-up","Negotiating","Confirmed","Live / delivered","On hold","Declined"];
@@ -250,6 +250,8 @@ function syncNoFu(){
   $("lfu").textContent=on?"Follow up by (not needed)":"Follow up by (required)";
   const d=document.querySelector(".dp");if(d)d.style.opacity=on?".5":"1";
 }
+let FIRST={};
+function calcFirst(){FIRST={};logs.forEach(l=>{if(l.inf&&l.at&&(!FIRST[l.inf]||l.at<FIRST[l.inf]))FIRST[l.inf]=l.at})}
 function syncFu(){const f=$("fu"),t=$("fud");if(f&&t)t.textContent=fmtD(f.value)||"Pick a date"}
 const who=id=>id?(id===myId?"You":String(id).split("@")[0]):"a teammate";
 const ini=n=>n.split(/\s+/).slice(0,2).map(w=>w[0]||"").join("").toUpperCase()||"?";
@@ -263,7 +265,7 @@ async function resolveNames(){
   try{const ps=await user.profiles(ids);ids.forEach(i=>{names[i]=(ps[i]&&ps[i].name)||""});}catch(e){}
 }
 function render(){
-  updTabs();
+  calcFirst();updTabs();
   if(view==="fu"){renderFu();if(openId)renderPanel();return}
   const q=$("q").value.toLowerCase();
   $("chips").innerHTML=[["",`All`,infs.length]].concat(STATUSES.map(s=>[s,s,infs.filter(i=>i.status===s).length])).filter(c=>c[0]===""||c[2]||c[0]===fsv)
@@ -277,7 +279,7 @@ function render(){
     return `<div class="item ${i.id===openId?"sel":""}" data-id="${esc(i.id)}"><div class="av">${esc(ini(i.name))}</div>
       <div><div class="name">${esc(i.name)} <span class="meta">${esc([i.id,igOf(i)?igName(igOf(i)):"",i.followers?fmtFol(i.followers)+" followers":"",i.platform,i.agency].filter(Boolean).join(" · "))}</span></div>
       <div class="snip">${i.lastNote?esc(i.lastNote):"No conversations logged yet."}</div></div>
-      <div class="right"><div class="pill">${dot(i.status)}${esc(i.status)}</div><div>${rel(i.lastAt)}${i.lastBy?" · "+esc(who(i.lastBy)):""}</div>${i.followUp?`<div class="${due?"due":""}">Follow up ${esc(fmtD(i.followUp))}</div>`:""}</div></div>`}).join(""):`<div class="empty">${infs.length?"No influencers match your search.":"No influencers yet. Add the first one to start logging conversations."}</div>`;
+      <div class="right"><div class="pill">${dot(i.status)}${esc(i.status)}</div><div>${rel(i.lastAt)}${i.lastBy?" · "+esc(who(i.lastBy)):""}</div>${FIRST[i.id]?`<div>First chat ${esc(fmtD(FIRST[i.id]))}</div>`:""}${i.followUp?`<div class="${due?"due":""}">Follow up ${esc(fmtD(i.followUp))}</div>`:""}</div></div>`}).join(""):`<div class="empty">${infs.length?"No influencers match your search.":"No influencers yet. Add the first one to start logging conversations."}</div>`;
   if(openId)renderPanel();
 }
 function renderPanel(){
@@ -398,7 +400,7 @@ function exportXlsx(){
   if(!window.XLSX){showErr("The Excel export tool didn't load. Check your internet connection and try again.");return}
   if(!infs.length){showErr("There is nothing to export yet.");return}
   const nm=Object.fromEntries(infs.map(i=>[i.id,i.name]));
-  const people=[...infs].sort((a,b)=>(b.lastAt||0)-(a.lastAt||0)).map(i=>({"ID":i.id,"Name":i.name,"Instagram":igOf(i),"Followers":i.followers?Number(i.followers):"","Followers updated":fmtD(i.followersAt),"Platform":i.platform,"Agency":i.agency,"Email":i.email,"Phone":i.phone,"Cost":i.cost,"Status":i.status,"Last contact":fmtD(i.lastAt),"Last contacted by":i.lastBy?who(i.lastBy):"","Last note":i.lastNote,"Next step":i.nextStep,"Follow up by":fmtD(i.followUp),"Added on":fmtD(i.createdAt)}));
+  const people=[...infs].sort((a,b)=>(b.lastAt||0)-(a.lastAt||0)).map(i=>({"ID":i.id,"Name":i.name,"Instagram":igOf(i),"Followers":i.followers?Number(i.followers):"","Followers updated":fmtD(i.followersAt),"Platform":i.platform,"Agency":i.agency,"Email":i.email,"Phone":i.phone,"Cost":i.cost,"Status":i.status,"First chat":fmtD(FIRST[i.id]),"Last contact":fmtD(i.lastAt),"Last contacted by":i.lastBy?who(i.lastBy):"","Last note":i.lastNote,"Next step":i.nextStep,"Follow up by":fmtD(i.followUp),"Added on":fmtD(i.createdAt)}));
   const convos=[...logs].sort((a,b)=>b.at-a.at).map(l=>({"Influencer ID":l.inf,"Influencer":nm[l.inf]||"(deleted)","Date":fmtD(l.at),"Time":new Date(l.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),"Channel":l.channel,"Notes":l.note,"Next step":l.nextStep,"Follow up by":fmtD(l.followUp),"Logged by":l.by?who(l.by):""}));
   const sheet=rows=>{const ws=XLSX.utils.json_to_sheet(rows);ws["!cols"]=Object.keys(rows[0]||{}).map(k=>({wch:Math.min(50,rows.reduce((m,r)=>Math.max(m,String(r[k]??"").length),k.length)+2)}));return ws};
   const wb=XLSX.utils.book_new();
