@@ -46,7 +46,7 @@ button:disabled{opacity:.5;cursor:default}
 .side{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;max-height:calc(100vh - 32px);overflow-y:auto}
 .head{display:flex;gap:12px;align-items:center;margin:8px 0 16px}.head .av{width:48px;height:48px;font-size:16px}
 .head h2{margin:0;font-size:20px;letter-spacing:-.01em}
-.facts{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin:-4px 0 18px}.facts:empty{display:none}.facts>div{overflow-wrap:anywhere}.chk{display:flex;gap:8px;align-items:center;margin:0;font-size:14px;color:var(--ink);cursor:pointer}.chk input{width:auto}.filters[hidden],.fuctl[hidden]{display:none}#ftog.on{border-color:var(--accent);color:var(--accent)}.tabs{display:flex;gap:4px;margin-bottom:12px;border-bottom:1px solid var(--line)}.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;padding:8px 14px;color:var(--mute);font-weight:600}.tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}.bdg{background:var(--accent);color:var(--accent-ink);border-radius:99px;padding:0 7px;font-size:12px;margin-left:4px}.fuctl{display:flex;gap:8px;align-items:center;margin-bottom:12px}.fuctl select{width:auto}.gh{padding:9px 16px;font-weight:700;font-size:13px;background:var(--bg);color:var(--mute);border-bottom:1px solid var(--line)}.gh.due{color:var(--warn)}body.fu .chips,body.fu #ftog,body.fu #filters{display:none!important}.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.filters select{width:auto;max-width:210px;padding:7px 10px;font-size:14px}.srow{display:flex;justify-content:space-between;align-items:center;width:100%;padding:9px 2px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:none;text-align:left}.sbtn{cursor:pointer}.sbtn:hover{color:var(--accent)}.brow{display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.brow a{color:var(--accent);text-decoration:none}.facts a{color:var(--accent);font-weight:500;text-decoration:none}.facts a:hover{text-decoration:underline}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin:-4px 0 18px}.facts:empty{display:none}.facts>div{overflow-wrap:anywhere}.chk{display:flex;gap:8px;align-items:center;margin:0;font-size:14px;color:var(--ink);cursor:pointer}.chk input{width:auto}.filters[hidden],.fuctl[hidden]{display:none}#ftog.on{border-color:var(--accent);color:var(--accent)}.tabs{display:flex;gap:4px;margin-bottom:12px;border-bottom:1px solid var(--line)}.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;padding:8px 14px;color:var(--mute);font-weight:600}.tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}.bdg{background:var(--accent);color:var(--accent-ink);border-radius:99px;padding:0 7px;font-size:12px;margin-left:4px}.fuctl{display:flex;gap:8px;align-items:center;margin-bottom:12px}.fuctl select{width:auto}.gh{padding:9px 16px;font-weight:700;font-size:13px;background:var(--bg);color:var(--mute);border-bottom:1px solid var(--line)}.gh.due{color:var(--warn)}body.fu .chips,body.fu #ftog,body.fu #filters{display:none!important}.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.filters select{width:auto;max-width:210px;padding:7px 10px;font-size:14px}.srow{display:flex;justify-content:space-between;align-items:center;width:100%;padding:9px 2px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:none;text-align:left}.sbtn{cursor:pointer}.sbtn:hover{color:var(--accent)}.brow{display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.brow a{color:var(--accent);text-decoration:none}.facts a{color:var(--accent);font-weight:500;text-decoration:none}.facts a:hover{text-decoration:underline}.facts a.sm{font-size:12px;margin-left:6px;font-weight:400}
 .form{display:grid;gap:10px;background:var(--bg);border-radius:12px;padding:14px;margin-bottom:22px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 label{font-size:13px;font-weight:500;color:var(--mute);display:block;margin-bottom:3px}
@@ -80,7 +80,7 @@ h3{font-size:15px;margin:0 0 12px}
   </div>
   <div id="err" class="err" hidden></div>
   <div class="tabs"><button id="t-all">All influencers</button><button id="t-fu">Follow-ups</button></div>
-  <div class="fuctl" id="fuctl" hidden><label style="margin:0">Follow-ups for</label><select id="fu-who"></select></div>
+  <div class="fuctl" id="fuctl" hidden><label style="margin:0">Follow-ups for</label><select id="fu-who"></select><span class="meta">On hold and Declined are not shown</span></div>
   <div class="tools"><input id="q" type="search" placeholder="Search name, Instagram or notes"><button id="ftog">Filters</button><div class="chips" id="chips"></div></div>
   <div class="filters" id="filters" hidden></div>
   <div class="meta" id="count" style="margin:0 0 10px"></div>
@@ -89,7 +89,7 @@ h3{font-size:15px;margin:0 0 12px}
     <aside class="panel" id="panel"><div class="side" id="side"><div class="ph">Select an influencer to see their history and log a new conversation.</div></div></aside>
   </div>
 </div>
-<div class="meta" style="text-align:center;padding:0 0 24px">Version 13</div>
+<div class="meta" style="text-align:center;padding:0 0 24px">Version 15 <span id="lat"></span></div>
 <script>
 const STATUSES=["Prospect","First message dropped","In conversation","Follow-up","Negotiating","Confirmed","Live / delivered","On hold","Declined"];
 const COLORS=["#94a3b8","#06b6d4","#3b82f6","#ec4899","#f59e0b","#10b981","#8b5cf6","#64748b","#ef4444"];
@@ -147,7 +147,7 @@ function bulkFollowers(){
     if(bad){alert("One of the follower counts isn't a valid number. Use digits, or K / M like 12.5K.");bad.focus();return}
     if(!items.length){closePanel();return}
     $("bsave").disabled=true;
-    try{await write("followers","influencers",items);closePanel()}
+    try{write("followers","influencers",items).catch(e=>showErr("Couldn't save followers ("+((e&&e.code)||"error")+")"));closePanel()}
     catch(e){showErr("Couldn't save followers ("+(e.code||"error")+")");$("bsave").disabled=false}
   };
 }
@@ -213,7 +213,7 @@ let view="all",fuWho="me",fwsig="";
 function addDays(iso,n){const [y,m,d]=iso.split("-").map(Number),t=new Date(y,m-1,d+n);return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0")}
 function updTog(){const n=Object.values(flt).filter(Boolean).length;$("ftog").textContent="Filters"+(n?" ("+n+")":"");$("ftog").classList.toggle("on",!$("filters").hidden||n>0)}
 function updTabs(){
-  const t=today(),n=infs.filter(i=>has(i.followUp)&&i.followUp<=t&&i.lastBy&&i.lastBy===myId).length;
+  const t=today(),n=infs.filter(i=>has(i.followUp)&&!CLOSED.includes(i.status)&&i.followUp<=t&&i.lastBy&&i.lastBy===myId).length;
   $("t-fu").innerHTML="Follow-ups"+(n?` <span class="bdg">${n}</span>`:"");
   $("t-all").classList.toggle("on",view==="all");$("t-fu").classList.toggle("on",view==="fu");
   $("fuctl").hidden=view!=="fu";
@@ -233,7 +233,7 @@ const fuRow=i=>`<div class="item ${i.id===openId?"sel":""}" data-id="${esc(i.id)
 function renderFu(){
   const q=$("q").value.toLowerCase(),t=today(),w=addDays(t,7);
   buildFuWho();
-  let rows=infs.filter(i=>has(i.followUp)&&(!q||[i.id,i.name,igOf(i),i.agency,i.nextStep,i.lastNote].join(" ").toLowerCase().includes(q)));
+  let rows=infs.filter(i=>has(i.followUp)&&!CLOSED.includes(i.status)&&(!q||[i.id,i.name,igOf(i),i.agency,i.nextStep,i.lastNote].join(" ").toLowerCase().includes(q)));
   if(fuWho==="me")rows=rows.filter(i=>i.lastBy&&i.lastBy===myId);else if(fuWho!=="all")rows=rows.filter(i=>i.lastBy===fuWho);
   rows.sort((a,b)=>a.followUp.localeCompare(b.followUp));
   const G=[["Overdue",r=>r.followUp<t,"due"],["Today",r=>r.followUp===t,""],["Next 7 days",r=>r.followUp>t&&r.followUp<=w,""],["Later",r=>r.followUp>w,""]];
@@ -251,6 +251,21 @@ function syncNoFu(){
 }
 let FIRST={};
 function calcFirst(){FIRST={};logs.forEach(l=>{if(l.inf&&l.at&&(!FIRST[l.inf]||l.at<FIRST[l.inf]))FIRST[l.inf]=l.at})}
+const WA_CC="91"; // default country code for numbers saved without one (91 = India)
+function waUrl(v){
+  let d=String(v||"").replace(/[^\d+]/g,"");
+  const plus=d.startsWith("+");d=d.replace(/\D/g,"");
+  if(!d)return "";
+  if(!plus){d=d.replace(/^00/,"");if(d.length===10)d=WA_CC+d;else if(d.length===11&&d.startsWith("0"))d=WA_CC+d.slice(1)}
+  return d.length>=11&&d.length<=15?"https://wa.me/"+d:"";
+}
+const okMail=v=>/^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(String(v||"").trim());
+const CLOSED=["On hold","Declined"];
+function topUsed(items,max){
+  const m=new Map();
+  items.forEach(({t,at})=>{t=String(t||"").trim();if(!t)return;const k=t.toLowerCase(),e=m.get(k)||{t,c:0,at:0};e.c++;e.at=Math.max(e.at,at||0);m.set(k,e)});
+  return [...m.values()].sort((a,b)=>b.c-a.c||b.at-a.at).slice(0,max).map(e=>e.t);
+}
 function syncFu(){const f=$("fu"),t=$("fud");if(f&&t)t.textContent=fmtD(f.value)||"Pick a date"}
 const who=id=>id?(id===myId?"You":String(id).split("@")[0]):"a teammate";
 const ini=n=>n.split(/\s+/).slice(0,2).map(w=>w[0]||"").join("").toUpperCase()||"?";
@@ -287,16 +302,17 @@ function renderPanel(){
   if(!i){closePanel();return}
   $("panel").classList.add("open");
   const my=logs.filter(l=>l.inf===openId).sort((a,b)=>b.at-a.at);
+  const notes=topUsed(logs.map(l=>({t:l.note,at:l.at})),20),steps=topUsed(logs.map(l=>({t:l.nextStep,at:l.at})),30);
   const keep=$("note")?$("note").value:"",keepN=$("next")?$("next").value:"",keepF=$("fu")?$("fu").value:"",keepC=$("nofu")?$("nofu").checked:false;
   $("side").innerHTML=`
     <div class="two" style="grid-template-columns:auto auto;justify-content:space-between"><button class="g" id="close">← All influencers</button><span><button class="g" id="edit">Edit details</button><button class="g" id="del">Delete</button></span></div>
     <div class="head"><div class="av">${esc(ini(i.name))}</div><div><h2>${esc(i.name)}</h2><div class="meta">${esc([i.id,i.platform].filter(Boolean).join(" · "))}</div></div></div>
-    <div class="facts">${[["Agency",i.agency],["Cost",i.cost],["Phone",i.phone],["Email",i.email],["Instagram",igOf(i),/^https?:\/\//i.test(igOf(i)||"")?`<a href="${esc(igOf(i))}" target="_blank" rel="noopener noreferrer">${esc(igName(igOf(i)))} ↗</a>`:""],["Followers",i.followers?Number(i.followers).toLocaleString("en-IN")+(i.followersAt?" (as of "+fmtD(i.followersAt)+")":""):""]].filter(f=>f[1]).map(f=>`<div><div class="meta">${f[0]}</div><div>${f[2]||esc(f[1])}</div></div>`).join("")}</div>
+    <div class="facts">${[["Agency",i.agency],["Cost",i.cost],["Phone",i.phone,waUrl(i.phone)?`<a href="${waUrl(i.phone)}" target="_blank" rel="noopener noreferrer" title="Open in WhatsApp">${esc(i.phone)} ↗</a>`:""],["Email",i.email,okMail(i.email)?`<a href="mailto:${esc(i.email.trim())}">${esc(i.email)}</a> <a class="sm" href="https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(i.email.trim())}" target="_blank" rel="noopener noreferrer">Outlook web ↗</a>`:""],["Instagram",igOf(i),/^https?:\/\//i.test(igOf(i)||"")?`<a href="${esc(igOf(i))}" target="_blank" rel="noopener noreferrer">${esc(igName(igOf(i)))} ↗</a>`:""],["Followers",i.followers?Number(i.followers).toLocaleString("en-IN")+(i.followersAt?" (as of "+fmtD(i.followersAt)+")":""):""]].filter(f=>f[1]).map(f=>`<div><div class="meta">${f[0]}</div><div>${f[2]||esc(f[1])}</div></div>`).join("")}</div>
     <div class="form">
       <div class="two"><div><label>Channel</label><select id="ch">${CHANNELS.map(c=>`<option>${c}</option>`).join("")}</select></div>
       <div><label>Status</label><select id="st">${STATUSES.map(s=>`<option ${s===i.status?"selected":""}>${s}</option>`).join("")}</select></div></div>
-      <div><label>What was discussed</label><textarea id="note" rows="4" placeholder="Summary, rates quoted, concerns, agreements"></textarea></div>
-      <div class="two"><div><label id="lnext">Next step (required)</label><input id="next" placeholder="Send contract"></div><div><label id="lfu">Follow up by (required)</label><div class="dp"><span class="dpt" id="fud">Pick a date</span><input id="fu" type="date" min="${today()}"></div></div></div>
+      <div><label>What was discussed</label>${notes.length?`<select id="qn" style="margin-bottom:6px"><option value="">Quick fill from earlier notes…</option>${notes.map((t,i)=>`<option value="${i}">${esc(t.length>70?t.slice(0,70)+"…":t)}</option>`).join("")}</select>`:""}<textarea id="note" rows="4" placeholder="Summary, rates quoted, concerns, agreements"></textarea></div>
+      <div class="two"><div><label id="lnext">Next step (required)</label><input id="next" list="nsl" autocomplete="off" placeholder="Send contract"><datalist id="nsl">${steps.map(t=>`<option value="${esc(t)}">`).join("")}</datalist></div><div><label id="lfu">Follow up by (required)</label><div class="dp"><span class="dpt" id="fud">Pick a date</span><input id="fu" type="date" min="${today()}"></div></div></div>
       <label class="chk"><input type="checkbox" id="nofu"> No follow-up needed</label>
       <div class="meta" id="hint" style="color:var(--warn)"></div>
       <button class="p" id="save">Log conversation</button>
@@ -304,6 +320,7 @@ function renderPanel(){
     <h3>History (${my.length})</h3>
     ${my.length?`<div class="tl">${my.map(l=>`<div class="log"><div class="meta"><b style="color:var(--ink)">${esc(l.channel)}</b> · ${fmtT(l.at)} · ${esc(who(l.by))}</div><div class="note">${esc(l.note)}</div>${l.nextStep?`<span class="next">Next: ${esc(l.nextStep)}${l.followUp?" by "+esc(fmtD(l.followUp)):""}</span>`:""}${l.followUp?"":` <span class="next">No follow-up needed</span>`}</div>`).join("")}</div>`:'<div class="meta">Nothing logged yet. Your first entry will appear here.</div>'}`;
   if(keep)$("note").value=keep;if(keepN)$("next").value=keepN;if(keepF)$("fu").value=keepF;$("fu").onclick=()=>{try{$("fu").showPicker()}catch(x){}};$("fu").onchange=syncFu;syncFu();$("nofu").checked=keepC;$("nofu").onchange=syncNoFu;syncNoFu();
+  if($("qn"))$("qn").onchange=e=>{const t=notes[+e.target.value];if(t){$("note").value=($("note").value?$("note").value+"\n":"")+t;$("note").focus()}e.target.value=""};
   $("close").onclick=closePanel;$("del").onclick=delInf;$("edit").onclick=editInf;$("save").onclick=saveLog;
 }
 function openPanel(id){editing=false;openId=id;render()}
@@ -320,7 +337,7 @@ async function saveLog(){
     const p1=db.collection("logs").add({inf:i.id,at:now,channel:$("ch").value,note,nextStep:next,followUp:fu,by:myId||""});
     const {id,...rest}=i;
     const p2=db.doc("influencers/"+id).set({...rest,status:st,lastAt:now,lastNote:note,lastBy:myId||"",nextStep:next,followUp:fu});
-    await Promise.all([p1,p2]);
+    Promise.all([p1,p2]).catch(e=>{showErr("Couldn't save the conversation ("+((e&&e.code)||"error")+"). Please try again.");if($("note")&&!$("note").value){$("note").value=note;$("next").value=next;$("fu").value=fu;syncFu()}});
     $("note").value="";$("next").value="";$("fu").value="";$("nofu").checked=false;syncNoFu();
   }catch(e){showErr("Couldn't save the conversation ("+(e.code||"error")+"). You may have view-only access; ask the owner for Contributor access.")}
   const b=$("save");if(b)b.disabled=false;
@@ -344,7 +361,7 @@ function editInf(){
     const fol=parseFol($("fo").value);if(fol===null){alert("Followers must be a number, like 12500 or 12.5K.");$("fo").focus();return}
     $("upd").disabled=true;
     const {id,...rest}=i;
-    try{await db.doc("influencers/"+id).set({...rest,name,platform:$("pl").value.trim(),email:$("em").value.trim(),phone:$("ph").value.trim(),agency:$("ag").value.trim(),cost:$("co").value.trim(),instagram:ig,followers:fol,followersAt:fol===String(i.followers||"")?(i.followersAt||0):(fol?Date.now():0),status:$("st").value});editing=false;render()}
+    try{const pr=db.doc("influencers/"+id).set({...rest,name,platform:$("pl").value.trim(),email:$("em").value.trim(),phone:$("ph").value.trim(),agency:$("ag").value.trim(),cost:$("co").value.trim(),instagram:ig,followers:fol,followersAt:fol===String(i.followers||"")?(i.followersAt||0):(fol?Date.now():0),status:$("st").value});pr.catch(e=>showErr("Couldn't save changes ("+((e&&e.code)||"error")+")"));editing=false;render()}
     catch(e){showErr("Couldn't save changes ("+(e.code||"error")+")");$("upd").disabled=false}
   };
 }
@@ -370,7 +387,7 @@ function addInfluencer(){
     const name=$("n").value.trim();if(!name){$("n").focus();return}
     const igv=$("ig").value.trim(),ig=igUrl(igv);if(igv&&!ig){alert("Please enter a valid Instagram link or @handle.");$("ig").focus();return}
     const fol=parseFol($("fo").value);if(fol===null){alert("Followers must be a number, like 12500 or 12.5K.");$("fo").focus();return}
-    $("create").disabled=true;
+    $("create").disabled=true;$("create").textContent="Adding…";
     try{const ref=await db.collection("influencers").add({name,platform:$("pl").value.trim(),email:$("em").value.trim(),phone:$("ph").value.trim(),agency:$("ag").value.trim(),cost:$("co").value.trim(),instagram:ig,followers:fol,followersAt:fol?Date.now():0,status:$("st").value,createdAt:Date.now(),lastAt:0,lastNote:"",lastBy:"",nextStep:"",followUp:""});openPanel(ref.id)}
     catch(e){showErr("Couldn't add the influencer ("+(e.code||"error")+")");closePanel()}
   };
@@ -380,9 +397,10 @@ const API="https://script.google.com/macros/s/AKfycbwgvLWt-wa7k9hMSJzJ-OVgKocGNZ
 let AUTH=null;
 async function gs(fn,...a){
   const body={fn,email:AUTH.email,password:AUTH.password,n:a[0],id:fn==="put"||fn==="del"?a[1]:undefined,d:fn==="add"?a[1]:fn==="put"?a[2]:fn==="followers"?a[1]:undefined};
-  let r,j;
+  let r,j;const t0=performance.now();
   try{r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)})}catch(x){throw {code:"network"}}
   try{j=await r.json()}catch(x){throw {code:"not-json"}}
+  {const el=$("lat");if(el)el.textContent="· last request "+((performance.now()-t0)/1000).toFixed(1)+"s"}
   if(j.error)throw {code:j.error};
   return j.data!==undefined?j.data:j;
 }
